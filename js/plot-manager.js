@@ -83,24 +83,19 @@ export function createReferenceLine(x0) {
 }
 
 export function buildTraces(state, datasets) {
-  const traces = [];
-
-  if (state.visibleSeries.function) {
-    traces.push(createFunctionTrace(datasets.xValues, datasets.series.function));
+  if (state.mode === 'function') {
+    const traces = [createFunctionTrace(datasets.xValues, datasets.series.function)];
     if (datasets.extrema.length > 0) {
       traces.push(createExtremumMarkers(datasets.extrema));
     }
+    return traces;
   }
 
-  if (state.visibleSeries.derivative) {
-    traces.push(createDerivativeTrace(datasets.xValues, datasets.series.derivative));
+  if (state.mode === 'derivative') {
+    return [createDerivativeTrace(datasets.xValues, datasets.series.derivative)];
   }
 
-  if (state.visibleSeries.integral) {
-    traces.push(createIntegralTrace(datasets.xValues, datasets.series.integral));
-  }
-
-  return traces;
+  return [createIntegralTrace(datasets.xValues, datasets.series.integral)];
 }
 
 export function buildLayout(state) {
@@ -118,14 +113,11 @@ export function buildLayout(state) {
       b: 56,
       l: 60
     },
-    hovermode: 'closest',
     xaxis: {
       title: 'x',
       range: [state.xMin, state.xMax],
       gridcolor: 'rgba(148, 163, 184, 0.14)',
-      zerolinecolor: 'rgba(148, 163, 184, 0.26)',
-      showspikes: true,
-      spikemode: 'across'
+      zerolinecolor: 'rgba(148, 163, 184, 0.26)'
     },
     yaxis: {
       title: 'y',
@@ -136,7 +128,7 @@ export function buildLayout(state) {
     legend: {
       orientation: 'h',
       x: 0,
-      y: 1.12
+      y: 1.1
     },
     shapes: [createReferenceLine(state.x0)],
     annotations: [
@@ -162,8 +154,6 @@ export function renderPlot(graphElement, state, datasets) {
   const config = {
     responsive: true,
     displaylogo: false,
-    scrollZoom: true,
-    modeBarButtonsToAdd: ['resetScale2d'],
     modeBarButtonsToRemove: ['select2d', 'lasso2d']
   };
 
@@ -173,14 +163,5 @@ export function renderPlot(graphElement, state, datasets) {
 export function purgePlot(graphElement) {
   if (window.Plotly) {
     window.Plotly.purge(graphElement);
-  }
-}
-
-export function autoscalePlot(graphElement) {
-  if (window.Plotly) {
-    window.Plotly.relayout(graphElement, {
-      'xaxis.autorange': true,
-      'yaxis.autorange': true
-    });
   }
 }
