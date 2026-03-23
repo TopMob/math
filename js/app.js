@@ -35,13 +35,12 @@ export function initApp() {
   });
 
   bindAutoRenderEvents(elements, debouncedRender);
-  executePipeline(elements);
+  waitForLibraries(elements);
 }
 
 function bindAutoRenderEvents(elements, debouncedRender) {
   const controls = [
     elements.functionInput,
-    elements.exampleSelect,
     elements.xMinInput,
     elements.xMaxInput,
     elements.sampleCountInput,
@@ -55,9 +54,6 @@ function bindAutoRenderEvents(elements, debouncedRender) {
   controls.forEach((control) => {
     const eventName = control.type === 'checkbox' || control.tagName === 'SELECT' ? 'change' : 'input';
     control.addEventListener(eventName, () => {
-      if (control === elements.exampleSelect) {
-        elements.functionInput.value = elements.exampleSelect.value;
-      }
       maybeAutoRender(elements, debouncedRender);
     });
   });
@@ -70,6 +66,21 @@ function maybeAutoRender(elements, debouncedRender) {
   }
 
   renderMessage(elements, 'Автообновление выключено. Нажмите «Построить график», чтобы пересчитать данные.', 'warning');
+}
+
+function waitForLibraries(elements, attempt = 0) {
+  if (window.Plotly && window.math) {
+    executePipeline(elements);
+    return;
+  }
+
+  if (attempt >= 40) {
+    renderMessage(elements, 'Не удалось загрузить Plotly.js или math.js. Проверьте доступ к CDN и обновите страницу.', 'error');
+    return;
+  }
+
+  renderMessage(elements, 'Загрузка Plotly.js и math.js…', 'warning');
+  window.setTimeout(() => waitForLibraries(elements, attempt + 1), 250);
 }
 
 function executePipeline(elements) {

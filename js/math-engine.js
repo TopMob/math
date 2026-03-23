@@ -67,13 +67,11 @@ export function findNearestIndex(xValues, targetX) {
 }
 
 export function getAnalysisValues(x0, compiledFunction, compiledDerivative, xValues, integralValues) {
-  const nearestIndex = findNearestIndex(xValues, x0);
-
   return {
     x0,
     functionValue: evaluateCompiled(compiledFunction, x0),
     derivativeValue: evaluateCompiled(compiledDerivative, x0),
-    integralValue: integralValues[nearestIndex] ?? null
+    integralValue: interpolateSeriesValue(xValues, integralValues, x0)
   };
 }
 
@@ -144,4 +142,30 @@ export function runMathPipeline(state) {
     analysis,
     extrema
   };
+}
+
+function interpolateSeriesValue(xValues, values, targetX) {
+  const nearestIndex = findNearestIndex(xValues, targetX);
+
+  if (xValues[nearestIndex] === targetX) {
+    return values[nearestIndex] ?? null;
+  }
+
+  const direction = xValues[nearestIndex] < targetX ? 1 : -1;
+  const secondaryIndex = nearestIndex + direction;
+
+  if (secondaryIndex < 0 || secondaryIndex >= xValues.length) {
+    return values[nearestIndex] ?? null;
+  }
+
+  const x1 = xValues[nearestIndex];
+  const x2 = xValues[secondaryIndex];
+  const y1 = values[nearestIndex];
+  const y2 = values[secondaryIndex];
+
+  if (!isFiniteNumber(y1) || !isFiniteNumber(y2) || x1 === x2) {
+    return null;
+  }
+
+  return y1 + ((targetX - x1) * (y2 - y1)) / (x2 - x1);
 }

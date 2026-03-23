@@ -12,10 +12,10 @@ export function readStateFromForm(elements) {
   return normalizeState({
     expression: elements.functionInput.value.trim(),
     selectedExample: elements.exampleSelect.value,
-    xMin: Number(elements.xMinInput.value),
-    xMax: Number(elements.xMaxInput.value),
-    x0: Number(elements.referenceXInput.value),
-    sampleCount: Number(elements.sampleCountInput.value),
+    xMin: parseNumericInput(elements.xMinInput.value),
+    xMax: parseNumericInput(elements.xMaxInput.value),
+    x0: parseNumericInput(elements.referenceXInput.value),
+    sampleCount: parseNumericInput(elements.sampleCountInput.value),
     autoUpdate: elements.autoUpdateInput.checked,
     visibleSeries: {
       function: elements.showFunctionInput.checked,
@@ -29,15 +29,15 @@ export function normalizeState(partialState) {
   const fallback = createDefaultState();
   const sampleCount = Number.isFinite(partialState.sampleCount)
     ? Math.round(partialState.sampleCount)
-    : fallback.sampleCount;
+    : partialState.sampleCount;
 
   return {
-    expression: partialState.expression || fallback.expression,
+    expression: partialState.expression,
     selectedExample: partialState.selectedExample || fallback.selectedExample,
-    xMin: Number.isFinite(partialState.xMin) ? partialState.xMin : fallback.xMin,
-    xMax: Number.isFinite(partialState.xMax) ? partialState.xMax : fallback.xMax,
-    x0: Number.isFinite(partialState.x0) ? partialState.x0 : fallback.x0,
-    sampleCount: clamp(sampleCount, SAMPLE_LIMITS.min, SAMPLE_LIMITS.max),
+    xMin: partialState.xMin,
+    xMax: partialState.xMax,
+    x0: partialState.x0,
+    sampleCount: Number.isFinite(sampleCount) ? clamp(sampleCount, SAMPLE_LIMITS.min, SAMPLE_LIMITS.max) : sampleCount,
     autoUpdate: Boolean(partialState.autoUpdate),
     visibleSeries: {
       function: Boolean(partialState.visibleSeries?.function),
@@ -73,4 +73,17 @@ export function validateState(state) {
   }
 
   return state;
+}
+
+function parseNumericInput(value) {
+  if (typeof value !== 'string') {
+    return Number.NaN;
+  }
+
+  const normalizedValue = value.trim();
+  if (!normalizedValue) {
+    return Number.NaN;
+  }
+
+  return Number(normalizedValue);
 }
