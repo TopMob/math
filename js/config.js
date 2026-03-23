@@ -6,10 +6,10 @@ window.MathVisualizer.config = {
     expression: 'x^3 - 2*x^2 + x + 1',
     mode: 'function',
     viewport: {
-      xMin: -5.5,
-      xMax: 5.5
+      xMin: -4.5,
+      xMax: 4.5
     },
-    sampleCount: 801
+    sampleCount: 501
   },
   MODE_LABELS: {
     function: 'Функция',
@@ -24,11 +24,11 @@ window.MathVisualizer.config = {
     },
     derivative: {
       title: 'Производная',
-      description: 'Темп изменения функции на той же аккуратной сетке с шагом 1.'
+      description: 'Темп изменения функции на той же аккуратной сетке без тяжёлой анимации.'
     },
     integral: {
       title: 'Первообразная',
-      description: 'Накопление площади относительно нуля без перегруженной анимации.'
+      description: 'Накопление площади относительно нуля с быстрым и стабильным рендером.'
     },
     combo: {
       title: '3 в 1',
@@ -46,9 +46,5 @@ window.MathVisualizer.config = {
     axis: 'rgba(70, 240, 190, 0.42)',
     axisStrong: 'rgba(95, 240, 255, 0.72)',
     legendBg: 'rgba(2, 17, 22, 0.85)'
-  },
-  ANIMATION: {
-    duration: 420,
-    fps: 24
   }
 };

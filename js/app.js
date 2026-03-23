@@ -11,17 +11,17 @@ window.MathVisualizer = window.MathVisualizer || {};
     let state = createInitialState();
     let viewportBound = false;
 
-    function executePipeline(options = {}) {
+    function executePipeline() {
       try {
         const validState = validateState(state);
         const datasets = runMathPipeline(validState);
         renderActiveMode(elements, validState.mode);
         renderMetrics(elements, validState, datasets);
-        renderPlot(elements.graph, validState, datasets, options).then(() => {
+        renderPlot(elements.graph, validState, datasets).then(() => {
           if (!viewportBound) {
             bindViewportEvents(elements.graph, (xMin, xMax) => {
               state = updateViewport(state, xMin, xMax);
-              executePipeline({ animate: false });
+              executePipeline();
             });
             viewportBound = true;
           }
@@ -33,7 +33,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
     function waitForLibraries(attempt = 0) {
       if (window.Plotly && window.math) {
-        executePipeline({ animate: true });
+        executePipeline();
         return;
       }
 
@@ -48,7 +48,7 @@ window.MathVisualizer = window.MathVisualizer || {};
     elements.modeButtons.forEach((button) => {
       button.addEventListener('click', () => {
         state = updateMode(state, button.dataset.mode);
-        executePipeline({ animate: true });
+        executePipeline();
       });
     });
 

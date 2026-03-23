@@ -1,15 +1,15 @@
 window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
-  const { PLOT_COLORS, MODE_LABELS, ANIMATION } = window.MathVisualizer.config;
+  const { PLOT_COLORS, MODE_LABELS } = window.MathVisualizer.config;
   const { isFiniteNumber } = window.MathVisualizer.utils;
 
-  function createLineTrace({ color, hoverLabel, name, showLegend }) {
+  function createLineTrace({ color, hoverLabel, name, showLegend, x, y }) {
     return {
       type: 'scatter',
       mode: 'lines',
-      x: [],
-      y: [],
+      x,
+      y,
       name,
       showlegend: showLegend,
       line: {
@@ -44,21 +44,18 @@ window.MathVisualizer = window.MathVisualizer || {};
     if (mode === 'combo') {
       return [
         {
-          key: 'function',
           name: 'Функция',
           hoverLabel: 'f(x)',
           color: PLOT_COLORS.function,
           values: datasets.series.function
         },
         {
-          key: 'derivative',
           name: 'Производная',
           hoverLabel: 'f′(x)',
           color: PLOT_COLORS.derivative,
           values: datasets.series.derivative
         },
         {
-          key: 'integral',
           name: 'Первообразная',
           hoverLabel: 'F(x)',
           color: PLOT_COLORS.integral,
@@ -69,7 +66,6 @@ window.MathVisualizer = window.MathVisualizer || {};
 
     return [
       {
-        key: mode,
         name: MODE_LABELS[mode],
         hoverLabel: mode === 'function' ? 'f(x)' : mode === 'derivative' ? 'f′(x)' : 'F(x)',
         color: PLOT_COLORS[mode],
@@ -88,27 +84,15 @@ window.MathVisualizer = window.MathVisualizer || {};
       }
     }
 
-    for (let index = zeroIndex; index < xValues.length; index += 1) {
+    for (let index = zeroIndex + 1; index < xValues.length; index += 1) {
       if (isFiniteNumber(yValues[index])) {
         right.push({ x: xValues[index], y: yValues[index] });
       }
     }
 
     return {
-      left,
-      right
-    };
-  }
-
-  function buildAnimatedCoordinates(splitSeries, progress) {
-    const leftCount = Math.max(1, Math.round(splitSeries.left.length * progress));
-    const rightCount = Math.max(1, Math.round(splitSeries.right.length * progress));
-    const leftSlice = splitSeries.left.slice(0, leftCount);
-    const rightSlice = splitSeries.right.slice(0, rightCount);
-
-    return {
-      x: [...leftSlice.map((point) => point.x), null, ...rightSlice.map((point) => point.x)],
-      y: [...leftSlice.map((point) => point.y), null, ...rightSlice.map((point) => point.y)]
+      x: [...left.map((point) => point.x), null, ...right.map((point) => point.x)],
+      y: [...left.map((point) => point.y), null, ...right.map((point) => point.y)]
     };
   }
 
@@ -133,19 +117,37 @@ window.MathVisualizer = window.MathVisualizer || {};
     const sorted = [...finiteValues].sort((left, right) => left - right);
     const min = sorted[0];
     const max = sorted[sorted.length - 1];
-    const lowIndex = Math.floor((sorted.length - 1) * 0.12);
-    const highIndex = Math.floor((sorted.length - 1) * 0.88);
-    const low = sorted[lowIndex];
-    const high = sorted[highIndex];
+    const low = sorted[Math.floor((sorted.length - 1) * 0.14)];
+    const high = sorted[Math.floor((sorted.length - 1) * 0.86)];
     const rawSpan = Math.max(max - min, 1e-6);
     const focusedSpan = Math.max(high - low, 1e-6);
-    const useFocused = rawSpan / focusedSpan > 2.6;
+    const useFocused = rawSpan / focusedSpan > 2.5;
     const lower = useFocused ? low : min;
     const upper = useFocused ? high : max;
     const span = Math.max(upper - lower, 1e-6);
-    const padding = Math.max(span * 0.14, 1.25);
+    const padding = Math.max(span * 0.12, 1);
 
     return [Math.min(lower - padding, -2), Math.max(upper + padding, 2)];
+  }
+
+  function getNiceStep(span, targetLines) {
+    const rawStep = Math.max(span / targetLines, 1);
+    const power = 10 ** Math.floor(Math.log10(rawStep));
+    const normalized = rawStep / power;
+
+    if (normalized <= 1) {
+      return 1 * power;
+    }
+
+    if (normalized <= 2) {
+      return 2 * power;
+    }
+
+    if (normalized <= 5) {
+      return 5 * power;
+    }
+
+    return 10 * power;
   }
 
   function buildLayout(state, datasets) {
@@ -193,18 +195,14 @@ window.MathVisualizer = window.MathVisualizer || {};
         tickcolor: 'rgba(120, 255, 230, 0.24)',
         linecolor: PLOT_COLORS.axis,
         linewidth: 2,
-        showline: true,
-        showspikes: true,
-        spikecolor: 'rgba(88, 214, 255, 0.32)',
-        spikethickness: 1,
-        spikemode: 'across'
+        showline: true
       },
       yaxis: {
         title: 'Y',
         range: yRange,
         tickmode: 'linear',
         tick0: 0,
-        dtick: 1,
+        dtick: getNiceStep(yRange[1] - yRange[0], 12),
         gridcolor: PLOT_COLORS.grid,
         zerolinecolor: PLOT_COLORS.axisStrong,
         zerolinewidth: 2,
@@ -212,8 +210,7 @@ window.MathVisualizer = window.MathVisualizer || {};
         linecolor: PLOT_COLORS.axis,
         linewidth: 2,
         showline: true,
-        automargin: true,
-        scaleanchor: false
+        automargin: true
       },
       shapes: [
         {
@@ -244,17 +241,17 @@ window.MathVisualizer = window.MathVisualizer || {};
 
   function buildPlotModel(state, datasets) {
     const baseSeries = getBaseSeries(state.mode, datasets);
-    const traces = baseSeries.map((series) => {
-      const splitSeries = splitSeriesAroundZero(datasets.xValues, series.values, datasets.zeroIndex);
-      return {
-        splitSeries,
-        trace: createLineTrace({
-          color: series.color,
-          hoverLabel: series.hoverLabel,
-          name: series.name,
-          showLegend: state.mode === 'combo'
-        })
-      };
+    const lineTraces = baseSeries.map((series) => {
+      const points = splitSeriesAroundZero(datasets.xValues, series.values, datasets.zeroIndex);
+
+      return createLineTrace({
+        color: series.color,
+        hoverLabel: series.hoverLabel,
+        name: series.name,
+        showLegend: state.mode === 'combo',
+        x: points.x,
+        y: points.y
+      });
     });
 
     const extras = [
@@ -279,53 +276,11 @@ window.MathVisualizer = window.MathVisualizer || {};
       }));
     }
 
-    return {
-      lineTraces: traces,
-      traces: [...traces.map((entry) => entry.trace), ...extras]
-    };
+    return [...lineTraces, ...extras];
   }
 
-  function setAnimatedFrame(graphElement, lineTraces, progress) {
-    window.Plotly.restyle(
-      graphElement,
-      {
-        x: lineTraces.map((entry) => [buildAnimatedCoordinates(entry.splitSeries, progress).x]),
-        y: lineTraces.map((entry) => [buildAnimatedCoordinates(entry.splitSeries, progress).y])
-      },
-      lineTraces.map((_, index) => index)
-    );
-  }
-
-  function cancelAnimation(graphElement) {
-    if (graphElement.__mathVisualizerAnimationFrame) {
-      window.cancelAnimationFrame(graphElement.__mathVisualizerAnimationFrame);
-      graphElement.__mathVisualizerAnimationFrame = null;
-    }
-  }
-
-  function animatePlot(graphElement, lineTraces) {
-    cancelAnimation(graphElement);
-    const totalFrames = Math.max(2, Math.round((ANIMATION.duration / 1000) * ANIMATION.fps));
-
-    function step(frameIndex) {
-      const progress = Math.min(frameIndex / totalFrames, 1);
-      setAnimatedFrame(graphElement, lineTraces, progress);
-
-      if (frameIndex < totalFrames) {
-        graphElement.__mathVisualizerAnimationFrame = window.requestAnimationFrame(() => step(frameIndex + 1));
-      }
-    }
-
-    step(1);
-  }
-
-  function renderStaticPlot(graphElement, lineTraces) {
-    setAnimatedFrame(graphElement, lineTraces, 1);
-  }
-
-  function renderPlot(graphElement, state, datasets, options = {}) {
-    const { animate = false } = options;
-    const plotModel = buildPlotModel(state, datasets);
+  function renderPlot(graphElement, state, datasets) {
+    const traces = buildPlotModel(state, datasets);
     const layout = buildLayout(state, datasets);
     const config = {
       responsive: true,
@@ -335,14 +290,7 @@ window.MathVisualizer = window.MathVisualizer || {};
       modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d']
     };
 
-    return window.Plotly.react(graphElement, plotModel.traces, layout, config).then(() => {
-      if (animate) {
-        animatePlot(graphElement, plotModel.lineTraces);
-        return;
-      }
-
-      renderStaticPlot(graphElement, plotModel.lineTraces);
-    });
+    return window.Plotly.react(graphElement, traces, layout, config);
   }
 
   function bindViewportEvents(graphElement, onViewportChange) {
@@ -357,7 +305,6 @@ window.MathVisualizer = window.MathVisualizer || {};
   }
 
   function purgePlot(graphElement) {
-    cancelAnimation(graphElement);
     if (window.Plotly) {
       window.Plotly.purge(graphElement);
     }
