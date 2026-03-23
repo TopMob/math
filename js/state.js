@@ -1,22 +1,27 @@
-import { APP_STATE } from './config.js';
+window.MathVisualizer = window.MathVisualizer || {};
 
-const AVAILABLE_MODES = new Set(['function', 'derivative', 'integral']);
+(() => {
+  const { APP_STATE } = window.MathVisualizer.config;
+  const availableModes = new Set(['function', 'derivative', 'integral']);
 
-export function createInitialState() {
-  return { ...APP_STATE };
-}
+  window.MathVisualizer.state = {
+    createInitialState() {
+      return { ...APP_STATE };
+    },
 
-export function updateMode(state, mode) {
-  return {
-    ...state,
-    mode
+    updateMode(state, mode) {
+      return {
+        ...state,
+        mode
+      };
+    },
+
+    validateState(state) {
+      if (!availableModes.has(state.mode)) {
+        throw new Error('Не выбран режим отображения.');
+      }
+
+      return state;
+    }
   };
-}
-
-export function validateState(state) {
-  if (!AVAILABLE_MODES.has(state.mode)) {
-    throw new Error('Не выбран режим отображения.');
-  }
-
-  return state;
-}
+})();
