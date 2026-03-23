@@ -61,49 +61,6 @@ window.MathVisualizer = window.MathVisualizer || {};
     return integralValues;
   }
 
-  function findNearestIndex(xValues, targetX) {
-    return xValues.reduce((bestIndex, currentX, index) => {
-      const bestDistance = Math.abs(xValues[bestIndex] - targetX);
-      const currentDistance = Math.abs(currentX - targetX);
-      return currentDistance < bestDistance ? index : bestIndex;
-    }, 0);
-  }
-
-  function interpolateSeriesValue(xValues, values, targetX) {
-    const nearestIndex = findNearestIndex(xValues, targetX);
-
-    if (xValues[nearestIndex] === targetX) {
-      return values[nearestIndex] ?? null;
-    }
-
-    const direction = xValues[nearestIndex] < targetX ? 1 : -1;
-    const secondaryIndex = nearestIndex + direction;
-
-    if (secondaryIndex < 0 || secondaryIndex >= xValues.length) {
-      return values[nearestIndex] ?? null;
-    }
-
-    const x1 = xValues[nearestIndex];
-    const x2 = xValues[secondaryIndex];
-    const y1 = values[nearestIndex];
-    const y2 = values[secondaryIndex];
-
-    if (!isFiniteNumber(y1) || !isFiniteNumber(y2) || x1 === x2) {
-      return null;
-    }
-
-    return y1 + ((targetX - x1) * (y2 - y1)) / (x2 - x1);
-  }
-
-  function getAnalysisValues(x0, compiledFunction, compiledDerivative, xValues, integralValues) {
-    return {
-      x0,
-      functionValue: evaluateCompiled(compiledFunction, x0),
-      derivativeValue: evaluateCompiled(compiledDerivative, x0),
-      integralValue: interpolateSeriesValue(xValues, integralValues, x0)
-    };
-  }
-
   function findExtrema(xValues, derivativeValues, compiledFunction) {
     const extrema = [];
 
@@ -140,8 +97,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
         extrema.push({
           x: extremumX,
-          y: extremumY,
-          label: 'экстремум'
+          y: extremumY
         });
       }
     }
@@ -150,14 +106,14 @@ window.MathVisualizer = window.MathVisualizer || {};
   }
 
   function runMathPipeline(state) {
-    const xValues = buildXValues(state.xMin, state.xMax, state.sampleCount);
+    const { xMin, xMax } = state.viewport;
+    const xValues = buildXValues(xMin, xMax, state.sampleCount);
     const compiledFunction = compileExpression(state.expression);
     const functionValues = evaluateSeries(compiledFunction, xValues);
     const derivativeExpression = deriveExpression(state.expression);
     const compiledDerivative = compileExpression(derivativeExpression);
     const derivativeValues = evaluateSeries(compiledDerivative, xValues);
     const integralValues = computeIntegralSeries(xValues, functionValues);
-    const analysis = getAnalysisValues(state.x0, compiledFunction, compiledDerivative, xValues, integralValues);
     const extrema = findExtrema(xValues, derivativeValues, compiledFunction);
 
     return {
@@ -167,7 +123,6 @@ window.MathVisualizer = window.MathVisualizer || {};
         derivative: derivativeValues,
         integral: integralValues
       },
-      analysis,
       extrema
     };
   }

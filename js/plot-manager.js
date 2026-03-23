@@ -1,20 +1,19 @@
 window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
-  const { PLOT_COLORS } = window.MathVisualizer.config;
+  const { PLOT_COLORS, MODE_LABELS } = window.MathVisualizer.config;
 
   function createFunctionTrace(xValues, yValues) {
     return {
       type: 'scatter',
       mode: 'lines',
-      name: 'f(x)',
       x: xValues,
       y: yValues,
       line: {
         color: PLOT_COLORS.function,
         width: 3
       },
-      hovertemplate: 'x=%{x:.4f}<br>f(x)=%{y:.4f}<extra></extra>'
+      hovertemplate: 'x=%{x:.4f}<br>y=%{y:.4f}<extra></extra>'
     };
   }
 
@@ -22,14 +21,13 @@ window.MathVisualizer = window.MathVisualizer || {};
     return {
       type: 'scatter',
       mode: 'lines',
-      name: "f'(x)",
       x: xValues,
       y: yValues,
       line: {
         color: PLOT_COLORS.derivative,
         width: 3
       },
-      hovertemplate: 'x=%{x:.4f}<br>f\'(x)=%{y:.4f}<extra></extra>'
+      hovertemplate: 'x=%{x:.4f}<br>y=%{y:.4f}<extra></extra>'
     };
   }
 
@@ -37,51 +35,31 @@ window.MathVisualizer = window.MathVisualizer || {};
     return {
       type: 'scatter',
       mode: 'lines',
-      name: 'F(x)',
       x: xValues,
       y: yValues,
       line: {
         color: PLOT_COLORS.integral,
         width: 3
       },
-      hovertemplate: 'x=%{x:.4f}<br>F(x)=%{y:.4f}<extra></extra>'
+      hovertemplate: 'x=%{x:.4f}<br>y=%{y:.4f}<extra></extra>'
     };
   }
 
   function createExtremumMarkers(extrema) {
     return {
       type: 'scatter',
-      mode: 'markers+text',
-      name: 'Экстремумы',
+      mode: 'markers',
       x: extrema.map((point) => point.x),
       y: extrema.map((point) => point.y),
-      text: extrema.map((point) => point.label),
-      textposition: 'top center',
       marker: {
-        size: 10,
+        size: 9,
         color: PLOT_COLORS.extrema,
         line: {
           width: 1,
           color: '#111827'
         }
       },
-      hovertemplate: 'x=%{x:.4f}<br>y=%{y:.4f}<extra>Экстремум</extra>'
-    };
-  }
-
-  function createReferenceLine(x0) {
-    return {
-      type: 'line',
-      x0,
-      x1: x0,
-      yref: 'paper',
-      y0: 0,
-      y1: 1,
-      line: {
-        color: PLOT_COLORS.reference,
-        width: 2,
-        dash: 'dot'
-      }
+      hovertemplate: 'Экстремум<br>x=%{x:.4f}<br>y=%{y:.4f}<extra></extra>'
     };
   }
 
@@ -103,7 +81,6 @@ window.MathVisualizer = window.MathVisualizer || {};
 
   function buildLayout(state) {
     return {
-      title: 'Координатная плоскость',
       paper_bgcolor: 'rgba(0,0,0,0)',
       plot_bgcolor: 'rgba(2, 6, 23, 0.16)',
       font: {
@@ -111,43 +88,30 @@ window.MathVisualizer = window.MathVisualizer || {};
         family: 'Inter, sans-serif'
       },
       margin: {
-        t: 56,
-        r: 20,
-        b: 56,
-        l: 60
+        t: 18,
+        r: 18,
+        b: 48,
+        l: 52
       },
+      showlegend: false,
+      dragmode: 'pan',
+      hovermode: 'closest',
       xaxis: {
-        title: 'x',
-        range: [state.xMin, state.xMax],
-        gridcolor: 'rgba(148, 163, 184, 0.14)',
-        zerolinecolor: 'rgba(148, 163, 184, 0.26)'
-      },
-      yaxis: {
-        title: 'y',
+        title: MODE_LABELS[state.mode],
+        range: [state.viewport.xMin, state.viewport.xMax],
         gridcolor: 'rgba(148, 163, 184, 0.14)',
         zerolinecolor: 'rgba(148, 163, 184, 0.26)',
-        automargin: true
+        showspikes: true,
+        spikemode: 'across'
       },
-      legend: {
-        orientation: 'h',
-        x: 0,
-        y: 1.1
+      yaxis: {
+        autorange: true,
+        gridcolor: 'rgba(148, 163, 184, 0.14)',
+        zerolinecolor: 'rgba(148, 163, 184, 0.26)',
+        automargin: true,
+        fixedrange: false
       },
-      shapes: [createReferenceLine(state.x0)],
-      annotations: [
-        {
-          x: state.x0,
-          y: 1,
-          yref: 'paper',
-          text: `x0 = ${state.x0}`,
-          showarrow: false,
-          xanchor: 'left',
-          yanchor: 'bottom',
-          font: {
-            color: '#cbd5e1'
-          }
-        }
-      ]
+      uirevision: `${state.mode}:${state.viewport.xMin}:${state.viewport.xMax}`
     };
   }
 
@@ -157,10 +121,23 @@ window.MathVisualizer = window.MathVisualizer || {};
     const config = {
       responsive: true,
       displaylogo: false,
+      scrollZoom: true,
+      doubleClick: 'reset',
       modeBarButtonsToRemove: ['select2d', 'lasso2d']
     };
 
     return window.Plotly.react(graphElement, traces, layout, config);
+  }
+
+  function bindViewportEvents(graphElement, onViewportChange) {
+    graphElement.on('plotly_relayout', (eventData) => {
+      const xMin = eventData['xaxis.range[0]'];
+      const xMax = eventData['xaxis.range[1]'];
+
+      if (typeof xMin === 'number' && typeof xMax === 'number') {
+        onViewportChange(xMin, xMax);
+      }
+    });
   }
 
   function purgePlot(graphElement) {
@@ -171,6 +148,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
   window.MathVisualizer.plotManager = {
     renderPlot,
+    bindViewportEvents,
     purgePlot
   };
 })();
