@@ -1,6 +1,5 @@
 :root {
   color-scheme: dark;
-  --bg: #020617;
   --surface: rgba(15, 23, 42, 0.82);
   --surface-soft: rgba(15, 23, 42, 0.58);
   --border: rgba(148, 163, 184, 0.18);
@@ -8,15 +7,11 @@
   --text: #e2e8f0;
   --text-muted: #94a3b8;
   --primary: #38bdf8;
-  --primary-strong: #0ea5e9;
-  --accent: #f97316;
   --success: #22c55e;
   --warning: #facc15;
   --danger: #f87171;
-  --radius-xl: 28px;
   --radius-lg: 22px;
   --radius-md: 16px;
-  --radius-sm: 12px;
   --shadow: 0 22px 50px rgba(2, 8, 23, 0.3);
   --space-1: 8px;
   --space-2: 12px;
@@ -64,8 +59,7 @@ button {
 .eyebrow,
 h1,
 h2,
-p,
-ul {
+p {
   margin: 0;
 }
 
@@ -84,9 +78,7 @@ h1 {
 
 .hero-text,
 .section-heading p,
-.message-box,
-.values-card,
-.plain-list {
+.message-box {
   color: var(--text-muted);
   line-height: 1.6;
 }
@@ -99,15 +91,9 @@ h1 {
 }
 
 .content-area,
-.info-grid,
-.values-card,
 .button-stack {
   display: grid;
   gap: var(--space-4);
-}
-
-.info-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .card {
@@ -122,15 +108,10 @@ h1 {
   padding: var(--space-5);
 }
 
-.section-heading {
+.section-heading,
+.controls-card {
   display: grid;
-  gap: var(--space-1);
-}
-
-.controls-card,
-.info-box {
-  display: grid;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .mode-button {
@@ -155,37 +136,6 @@ h1 {
   border-color: rgba(56, 189, 248, 0.9);
 }
 
-.info-box,
-.values-card,
-.message-box,
-.plain-list li {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-soft);
-}
-
-.info-box,
-.values-card,
-.message-box {
-  padding: 16px;
-}
-
-.info-label {
-  color: var(--primary);
-  font-weight: 700;
-}
-
-.plain-list {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  gap: var(--space-2);
-}
-
-.plain-list li {
-  padding: 12px 14px;
-}
-
 .graph {
   min-height: 540px;
   width: 100%;
@@ -194,15 +144,11 @@ h1 {
   background: rgba(2, 6, 23, 0.34);
 }
 
-.value-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.value-row strong {
-  color: var(--text);
-  text-align: right;
+.message-box {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
 }
 
 .message-box.success {
@@ -221,8 +167,7 @@ h1 {
 }
 
 @media (max-width: 960px) {
-  .layout,
-  .info-grid {
+  .layout {
     grid-template-columns: 1fr;
   }
 }

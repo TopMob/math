@@ -2,13 +2,11 @@ window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
   const { FIXED_FUNCTION, MODE_LABELS } = window.MathVisualizer.config;
-  const { formatNumber } = window.MathVisualizer.utils;
 
   function getElements() {
     return {
       graph: document.getElementById('graph'),
       modeButtons: Array.from(document.querySelectorAll('[data-mode]')),
-      valuesCard: document.getElementById('values-card'),
       messageBox: document.getElementById('message-box'),
       chartCaption: document.getElementById('chart-caption')
     };
@@ -20,18 +18,6 @@ window.MathVisualizer = window.MathVisualizer || {};
     });
 
     elements.chartCaption.textContent = `Показан график ${MODE_LABELS[mode]}.`;
-  }
-
-  function renderValues(elements, analysis) {
-    const rows = [
-      { label: 'f(1)', value: analysis.functionValue },
-      { label: "f'(1)", value: analysis.derivativeValue },
-      { label: 'F(1)', value: analysis.integralValue }
-    ];
-
-    elements.valuesCard.innerHTML = rows
-      .map(({ label, value }) => `<div class="value-row"><span>${label}</span><strong>${formatNumber(value)}</strong></div>`)
-      .join('');
   }
 
   function renderMessage(elements, text, type) {
@@ -46,7 +32,6 @@ window.MathVisualizer = window.MathVisualizer || {};
   window.MathVisualizer.ui = {
     getElements,
     renderActiveMode,
-    renderValues,
     renderMessage,
     renderInitialMessage
   };

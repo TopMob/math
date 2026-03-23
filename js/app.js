@@ -5,7 +5,7 @@ window.MathVisualizer = window.MathVisualizer || {};
   const { runMathPipeline } = window.MathVisualizer.mathEngine;
   const { renderPlot, purgePlot } = window.MathVisualizer.plotManager;
   const { createInitialState, updateMode, validateState } = window.MathVisualizer.state;
-  const { getElements, renderActiveMode, renderInitialMessage, renderMessage, renderValues } = window.MathVisualizer.ui;
+  const { getElements, renderActiveMode, renderInitialMessage, renderMessage } = window.MathVisualizer.ui;
 
   function initApp() {
     const elements = getElements();
@@ -49,7 +49,6 @@ window.MathVisualizer = window.MathVisualizer || {};
       const validState = validateState(state);
       const datasets = runMathPipeline(validState);
       renderPlot(elements.graph, validState, datasets);
-      renderValues(elements, datasets.analysis);
       renderMessage(elements, `Построен график ${MODE_LABELS[validState.mode]}.`, 'success');
     } catch (error) {
       purgePlot(elements.graph);

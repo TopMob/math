@@ -45,15 +45,6 @@
             <button type="button" class="mode-button" data-mode="derivative">Производная</button>
             <button type="button" class="mode-button" data-mode="integral">Первообразная</button>
           </div>
-
-          <div class="info-box">
-            <span class="info-label">Фиксированные параметры</span>
-            <ul class="plain-list">
-              <li>Диапазон x: от -10 до 10</li>
-              <li>Точка анализа x0 = 1</li>
-              <li>Первообразная строится численно</li>
-            </ul>
-          </div>
         </section>
 
         <section class="content-area">
@@ -64,28 +55,6 @@
             </div>
             <div id="graph" class="graph" aria-label="График функции"></div>
           </section>
-
-          <div class="info-grid">
-            <section class="card section-card">
-              <div class="section-heading">
-                <h2>Значения в точке x0 = 1</h2>
-                <p>Карточка пересчитывается для текущего режима и общей модели функции.</p>
-              </div>
-              <div id="values-card" class="values-card" aria-live="polite"></div>
-            </section>
-
-            <section class="card section-card">
-              <div class="section-heading">
-                <h2>Ограничения</h2>
-                <p>Вычисления сохраняются честными и простыми.</p>
-              </div>
-              <ul class="plain-list">
-                <li>Производная считается через math.js.</li>
-                <li>Первообразная строится по численному интегралу.</li>
-                <li>Экстремумы отмечаются на графике функции.</li>
-              </ul>
-            </section>
-          </div>
 
           <section class="card section-card">
             <div class="section-heading">

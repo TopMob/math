@@ -1,22 +1,22 @@
 window.MathVisualizer = window.MathVisualizer || {};
 
-window.MathVisualizer.utils = {
-  isFiniteNumber(value) {
+(() => {
+  function isFiniteNumber(value) {
     return typeof value === 'number' && Number.isFinite(value);
-  },
+  }
 
-  formatNumber(value) {
-    if (!this.isFiniteNumber(value)) {
+  function formatNumber(value) {
+    if (!isFiniteNumber(value)) {
       return 'не определено';
     }
 
     return new Intl.NumberFormat('ru-RU', {
       maximumFractionDigits: 6
     }).format(value);
-  },
+  }
 
-  interpolateRoot(x1, y1, x2, y2) {
-    if (!this.isFiniteNumber(x1) || !this.isFiniteNumber(x2) || !this.isFiniteNumber(y1) || !this.isFiniteNumber(y2)) {
+  function interpolateRoot(x1, y1, x2, y2) {
+    if (!isFiniteNumber(x1) || !isFiniteNumber(x2) || !isFiniteNumber(y1) || !isFiniteNumber(y2)) {
       return null;
     }
 
@@ -26,4 +26,10 @@ window.MathVisualizer.utils = {
 
     return x1 - (y1 * (x2 - x1)) / (y2 - y1);
   }
-};
+
+  window.MathVisualizer.utils = {
+    isFiniteNumber,
+    formatNumber,
+    interpolateRoot
+  };
+})();
