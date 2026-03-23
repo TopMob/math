@@ -32,8 +32,8 @@
           <span class="hero-kicker">Математическая сцена</span>
           <h1 aria-label="x в кубе минус 2 икс в квадрате плюс икс плюс 1">x<sup>3</sup> − 2x<sup>2</sup> + x + 1</h1>
           <p class="hero-description">
-            Аккуратная визуализация функции, производной и первообразной с осмысленным масштабом,
-            анимацией прорисовки от точки x = 0 и фокусом на характере кривой.
+            Чистая координатная плоскость, нормальный шаг сетки, акцент на оси X/Y и быстрый
+            режим просмотра как по отдельности, так и сразу всех трёх кривых в одной сцене.
           </p>
         </div>
 
@@ -43,12 +43,12 @@
             <article class="info-card">
               <span class="info-label">Режим</span>
               <strong id="modeTitle">Функция</strong>
-              <p id="modeDescription">Исходная кривая с выделением экстремумов.</p>
+              <p id="modeDescription">Исходная кривая с выделенными осями и считываемой сеткой.</p>
             </article>
             <article class="info-card info-card-accent">
-              <span class="info-label">Динамика</span>
-              <strong>Старт из x = 0</strong>
-              <p>График мягко раскрывается влево и вправо при каждом переключении режима.</p>
+              <span class="info-label">Сцена</span>
+              <strong>Голубой · зелёный · чёрный</strong>
+              <p>Палитра усилена в сторону бирюзы и зелени, а анимация стала легче и быстрее.</p>
             </article>
           </div>
         </div>
@@ -60,19 +60,20 @@
             <button type="button" class="mode-button is-active" data-mode="function">Функция</button>
             <button type="button" class="mode-button" data-mode="derivative">Производная</button>
             <button type="button" class="mode-button" data-mode="integral">Первообразная</button>
+            <button type="button" class="mode-button mode-button-combo" data-mode="combo">3 в 1</button>
           </div>
 
           <div class="insight-strip" aria-label="Ключевые показатели графика">
             <article class="metric-card">
-              <span class="metric-label">Значение при x = 0</span>
+              <span class="metric-label" id="metricPrimaryLabel">Значение при x = 0</span>
               <strong class="metric-value" id="metricPrimary">—</strong>
             </article>
             <article class="metric-card">
-              <span class="metric-label">Наклон в нуле</span>
+              <span class="metric-label" id="metricSecondaryLabel">Наклон в нуле</span>
               <strong class="metric-value" id="metricSlope">—</strong>
             </article>
             <article class="metric-card">
-              <span class="metric-label">Экстремумы в окне</span>
+              <span class="metric-label" id="metricTertiaryLabel">Экстремумы в окне</span>
               <strong class="metric-value" id="metricExtrema">—</strong>
             </article>
           </div>

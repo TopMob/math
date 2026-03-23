@@ -10,6 +10,9 @@ window.MathVisualizer = window.MathVisualizer || {};
       modeButtons: Array.from(document.querySelectorAll('[data-mode]')),
       modeTitle: document.getElementById('modeTitle'),
       modeDescription: document.getElementById('modeDescription'),
+      metricPrimaryLabel: document.getElementById('metricPrimaryLabel'),
+      metricSecondaryLabel: document.getElementById('metricSecondaryLabel'),
+      metricTertiaryLabel: document.getElementById('metricTertiaryLabel'),
       metricPrimary: document.getElementById('metricPrimary'),
       metricSlope: document.getElementById('metricSlope'),
       metricExtrema: document.getElementById('metricExtrema')
@@ -28,11 +31,25 @@ window.MathVisualizer = window.MathVisualizer || {};
   }
 
   function renderMetrics(elements, state, datasets) {
-    const currentStats = datasets.stats[state.mode];
-    const derivativeAtZero = datasets.stats.derivative.atZero;
+    if (state.mode === 'combo') {
+      elements.metricPrimaryLabel.textContent = 'f(0) · f′(0) · F(0)';
+      elements.metricSecondaryLabel.textContent = 'Диапазон X';
+      elements.metricTertiaryLabel.textContent = 'Экстремумы функции';
+      elements.metricPrimary.textContent = [
+        `f=${formatNumber(datasets.stats.function.atZero)}`,
+        `f′=${formatNumber(datasets.stats.derivative.atZero)}`,
+        `F=${formatNumber(datasets.stats.integral.atZero)}`
+      ].join(' · ');
+      elements.metricSlope.textContent = `${formatNumber(state.viewport.xMin)} … ${formatNumber(state.viewport.xMax)}`;
+      elements.metricExtrema.textContent = String(datasets.extrema.length);
+      return;
+    }
 
-    elements.metricPrimary.textContent = formatNumber(currentStats.atZero);
-    elements.metricSlope.textContent = formatNumber(derivativeAtZero);
+    elements.metricPrimaryLabel.textContent = 'Значение при x = 0';
+    elements.metricSecondaryLabel.textContent = 'Наклон в нуле';
+    elements.metricTertiaryLabel.textContent = 'Экстремумы в окне';
+    elements.metricPrimary.textContent = formatNumber(datasets.stats[state.mode].atZero);
+    elements.metricSlope.textContent = formatNumber(datasets.stats.derivative.atZero);
     elements.metricExtrema.textContent = String(datasets.extrema.length);
   }
 
