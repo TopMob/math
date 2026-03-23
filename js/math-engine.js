@@ -1,7 +1,7 @@
 window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
-  const { interpolateRoot, isFiniteNumber } = window.MathVisualizer.utils;
+  const { isFiniteNumber } = window.MathVisualizer.utils;
 
   function buildXValues(xMin, xMax, sampleCount) {
     const step = (xMax - xMin) / (sampleCount - 1);
@@ -61,7 +61,53 @@ window.MathVisualizer = window.MathVisualizer || {};
     return integralValues;
   }
 
-  function findExtrema(xValues, derivativeValues, compiledFunction) {
+  function refineRoot(compiledDerivative, leftX, rightX) {
+    let left = leftX;
+    let right = rightX;
+    let leftValue = evaluateCompiled(compiledDerivative, left);
+    let rightValue = evaluateCompiled(compiledDerivative, right);
+
+    if (!isFiniteNumber(leftValue) || !isFiniteNumber(rightValue)) {
+      return null;
+    }
+
+    if (leftValue === 0) {
+      return left;
+    }
+
+    if (rightValue === 0) {
+      return right;
+    }
+
+    if (leftValue * rightValue > 0) {
+      return null;
+    }
+
+    for (let iteration = 0; iteration < 48; iteration += 1) {
+      const middle = (left + right) / 2;
+      const middleValue = evaluateCompiled(compiledDerivative, middle);
+
+      if (!isFiniteNumber(middleValue)) {
+        return null;
+      }
+
+      if (Math.abs(middleValue) < 1e-10 || Math.abs(right - left) < 1e-7) {
+        return middle;
+      }
+
+      if (leftValue * middleValue <= 0) {
+        right = middle;
+        rightValue = middleValue;
+      } else {
+        left = middle;
+        leftValue = middleValue;
+      }
+    }
+
+    return (left + right) / 2;
+  }
+
+  function findExtrema(xValues, derivativeValues, compiledFunction, compiledDerivative) {
     const extrema = [];
 
     for (let index = 1; index < derivativeValues.length; index += 1) {
@@ -74,32 +120,34 @@ window.MathVisualizer = window.MathVisualizer || {};
         continue;
       }
 
-      if (previousDerivative === 0 || currentDerivative === 0 || previousDerivative * currentDerivative < 0) {
-        const extremumX = previousDerivative === 0
-          ? previousX
-          : currentDerivative === 0
-            ? currentX
-            : interpolateRoot(previousX, previousDerivative, currentX, currentDerivative);
+      let extremumX = null;
 
-        if (!isFiniteNumber(extremumX)) {
-          continue;
-        }
-
-        const extremumY = evaluateCompiled(compiledFunction, extremumX);
-        if (!isFiniteNumber(extremumY)) {
-          continue;
-        }
-
-        const lastPoint = extrema[extrema.length - 1];
-        if (lastPoint && Math.abs(lastPoint.x - extremumX) < 1e-3) {
-          continue;
-        }
-
-        extrema.push({
-          x: extremumX,
-          y: extremumY
-        });
+      if (previousDerivative === 0) {
+        extremumX = previousX;
+      } else if (currentDerivative === 0) {
+        extremumX = currentX;
+      } else if (previousDerivative * currentDerivative < 0) {
+        extremumX = refineRoot(compiledDerivative, previousX, currentX);
       }
+
+      if (!isFiniteNumber(extremumX)) {
+        continue;
+      }
+
+      const extremumY = evaluateCompiled(compiledFunction, extremumX);
+      if (!isFiniteNumber(extremumY)) {
+        continue;
+      }
+
+      const lastPoint = extrema[extrema.length - 1];
+      if (lastPoint && Math.abs(lastPoint.x - extremumX) < 1e-4) {
+        continue;
+      }
+
+      extrema.push({
+        x: extremumX,
+        y: extremumY
+      });
     }
 
     return extrema;
@@ -114,7 +162,7 @@ window.MathVisualizer = window.MathVisualizer || {};
     const compiledDerivative = compileExpression(derivativeExpression);
     const derivativeValues = evaluateSeries(compiledDerivative, xValues);
     const integralValues = computeIntegralSeries(xValues, functionValues);
-    const extrema = findExtrema(xValues, derivativeValues, compiledFunction);
+    const extrema = findExtrema(xValues, derivativeValues, compiledFunction, compiledDerivative);
 
     return {
       xValues,

@@ -11,9 +11,9 @@ window.MathVisualizer = window.MathVisualizer || {};
       y: yValues,
       line: {
         color: PLOT_COLORS.function,
-        width: 3
+        width: 3.5
       },
-      hovertemplate: 'x=%{x:.4f}<br>y=%{y:.4f}<extra></extra>'
+      hovertemplate: 'f(x)<br>x=%{x:.5f}<br>y=%{y:.5f}<extra></extra>'
     };
   }
 
@@ -25,9 +25,9 @@ window.MathVisualizer = window.MathVisualizer || {};
       y: yValues,
       line: {
         color: PLOT_COLORS.derivative,
-        width: 3
+        width: 3.5
       },
-      hovertemplate: 'x=%{x:.4f}<br>y=%{y:.4f}<extra></extra>'
+      hovertemplate: 'f′(x)<br>x=%{x:.5f}<br>y=%{y:.5f}<extra></extra>'
     };
   }
 
@@ -39,9 +39,9 @@ window.MathVisualizer = window.MathVisualizer || {};
       y: yValues,
       line: {
         color: PLOT_COLORS.integral,
-        width: 3
+        width: 3.5
       },
-      hovertemplate: 'x=%{x:.4f}<br>y=%{y:.4f}<extra></extra>'
+      hovertemplate: 'F(x)<br>x=%{x:.5f}<br>y=%{y:.5f}<extra></extra>'
     };
   }
 
@@ -52,14 +52,14 @@ window.MathVisualizer = window.MathVisualizer || {};
       x: extrema.map((point) => point.x),
       y: extrema.map((point) => point.y),
       marker: {
-        size: 9,
+        size: 10,
         color: PLOT_COLORS.extrema,
         line: {
-          width: 1,
+          width: 1.5,
           color: '#111827'
         }
       },
-      hovertemplate: 'Экстремум<br>x=%{x:.4f}<br>y=%{y:.4f}<extra></extra>'
+      hovertemplate: 'Экстремум<br>x=%{x:.5f}<br>y=%{y:.5f}<extra></extra>'
     };
   }
 
@@ -82,36 +82,35 @@ window.MathVisualizer = window.MathVisualizer || {};
   function buildLayout(state) {
     return {
       paper_bgcolor: 'rgba(0,0,0,0)',
-      plot_bgcolor: 'rgba(2, 6, 23, 0.16)',
+      plot_bgcolor: 'rgba(2, 6, 23, 0.18)',
       font: {
         color: '#e2e8f0',
         family: 'Inter, sans-serif'
       },
       margin: {
-        t: 18,
-        r: 18,
-        b: 48,
-        l: 52
+        t: 12,
+        r: 12,
+        b: 44,
+        l: 54
       },
       showlegend: false,
       dragmode: 'pan',
       hovermode: 'closest',
       xaxis: {
-        title: MODE_LABELS[state.mode],
+        title: 'x',
         range: [state.viewport.xMin, state.viewport.xMax],
         gridcolor: 'rgba(148, 163, 184, 0.14)',
-        zerolinecolor: 'rgba(148, 163, 184, 0.26)',
+        zerolinecolor: 'rgba(148, 163, 184, 0.28)',
         showspikes: true,
         spikemode: 'across'
       },
       yaxis: {
+        title: MODE_LABELS[state.mode],
         autorange: true,
         gridcolor: 'rgba(148, 163, 184, 0.14)',
-        zerolinecolor: 'rgba(148, 163, 184, 0.26)',
-        automargin: true,
-        fixedrange: false
-      },
-      uirevision: `${state.mode}:${state.viewport.xMin}:${state.viewport.xMax}`
+        zerolinecolor: 'rgba(148, 163, 184, 0.28)',
+        automargin: true
+      }
     };
   }
 
@@ -134,7 +133,7 @@ window.MathVisualizer = window.MathVisualizer || {};
       const xMin = eventData['xaxis.range[0]'];
       const xMax = eventData['xaxis.range[1]'];
 
-      if (typeof xMin === 'number' && typeof xMax === 'number') {
+      if (typeof xMin === 'number' && typeof xMax === 'number' && Math.abs(xMax - xMin) > 1e-6) {
         onViewportChange(xMin, xMax);
       }
     });
