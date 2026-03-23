@@ -14,7 +14,7 @@ window.MathVisualizer = window.MathVisualizer || {};
       showlegend: showLegend,
       line: {
         color,
-        width: 3.2
+        width: 3.4
       },
       hovertemplate: `${hoverLabel}<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>`
     };
@@ -33,7 +33,7 @@ window.MathVisualizer = window.MathVisualizer || {};
         color,
         line: {
           width: 1.5,
-          color: '#021015'
+          color: '#081224'
         }
       },
       hovertemplate
@@ -153,12 +153,13 @@ window.MathVisualizer = window.MathVisualizer || {};
   function buildLayout(state, datasets) {
     const yRange = computeSmartYRange(state.mode, datasets);
     const isCombo = state.mode === 'combo';
+    const xSpan = state.viewport.xMax - state.viewport.xMin;
 
     return {
       paper_bgcolor: 'rgba(0,0,0,0)',
-      plot_bgcolor: 'rgba(1, 11, 16, 0.16)',
+      plot_bgcolor: 'rgba(5, 26, 18, 0.18)',
       font: {
-        color: '#dcfdf7',
+        color: '#dbeafe',
         family: 'Inter, sans-serif'
       },
       margin: {
@@ -173,7 +174,7 @@ window.MathVisualizer = window.MathVisualizer || {};
         xanchor: 'right',
         y: 1,
         bgcolor: PLOT_COLORS.legendBg,
-        bordercolor: 'rgba(74, 222, 128, 0.2)',
+        bordercolor: 'rgba(96, 165, 250, 0.22)',
         borderwidth: 1,
         font: {
           color: PLOT_COLORS.comboText,
@@ -188,11 +189,11 @@ window.MathVisualizer = window.MathVisualizer || {};
         range: [state.viewport.xMin, state.viewport.xMax],
         tickmode: 'linear',
         tick0: 0,
-        dtick: 1,
+        dtick: getNiceStep(xSpan, 10),
         gridcolor: PLOT_COLORS.grid,
         zerolinecolor: PLOT_COLORS.axisStrong,
         zerolinewidth: 2,
-        tickcolor: 'rgba(120, 255, 230, 0.24)',
+        tickcolor: 'rgba(96, 165, 250, 0.24)',
         linecolor: PLOT_COLORS.axis,
         linewidth: 2,
         showline: true
@@ -206,7 +207,7 @@ window.MathVisualizer = window.MathVisualizer || {};
         gridcolor: PLOT_COLORS.grid,
         zerolinecolor: PLOT_COLORS.axisStrong,
         zerolinewidth: 2,
-        tickcolor: 'rgba(120, 255, 230, 0.24)',
+        tickcolor: 'rgba(96, 165, 250, 0.24)',
         linecolor: PLOT_COLORS.axis,
         linewidth: 2,
         showline: true,
@@ -261,7 +262,7 @@ window.MathVisualizer = window.MathVisualizer || {};
         color: PLOT_COLORS.origin,
         name: 'Начало координат',
         hovertemplate: 'Начало координат<br>x=0<br>y=0<extra></extra>',
-        size: 9
+        size: 8
       })
     ];
 
@@ -272,7 +273,7 @@ window.MathVisualizer = window.MathVisualizer || {};
         color: PLOT_COLORS.extrema,
         name: 'Экстремумы',
         hovertemplate: 'Экстремум<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>',
-        size: 11
+        size: 10
       }));
     }
 

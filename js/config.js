@@ -32,19 +32,19 @@ window.MathVisualizer.config = {
     },
     combo: {
       title: '3 в 1',
-      description: 'Функция, производная и первообразная на одной координатной плоскости с легендой.'
+      description: 'Три хорошо различимых графика на одной координатной плоскости с чистой легендой.'
     }
   },
   PLOT_COLORS: {
-    function: '#58d6ff',
-    derivative: '#38bdf8',
+    function: '#38bdf8',
+    derivative: '#a78bfa',
     integral: '#34d399',
-    comboText: '#d1fae5',
-    extrema: '#9ef01a',
-    origin: '#a7f3d0',
-    grid: 'rgba(120, 255, 230, 0.12)',
-    axis: 'rgba(70, 240, 190, 0.42)',
-    axisStrong: 'rgba(95, 240, 255, 0.72)',
-    legendBg: 'rgba(2, 17, 22, 0.85)'
+    comboText: '#dbeafe',
+    extrema: '#fbbf24',
+    origin: '#f8fafc',
+    grid: 'rgba(96, 165, 250, 0.12)',
+    axis: 'rgba(59, 130, 246, 0.34)',
+    axisStrong: 'rgba(125, 211, 252, 0.72)',
+    legendBg: 'rgba(8, 18, 36, 0.86)'
   }
 };
