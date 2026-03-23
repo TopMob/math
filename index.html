@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Графики функции, производной и первообразной</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js" defer></script>
+    <script src="js/config.js" defer></script>
+    <script src="js/utils.js" defer></script>
+    <script src="js/state.js" defer></script>
+    <script src="js/math-engine.js" defer></script>
+    <script src="js/plot-manager.js" defer></script>
+    <script src="js/ui.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <h1 aria-label="x в кубе минус 2 икс в квадрате плюс икс плюс 1">x<sup>3</sup> − 2x<sup>2</sup> + x + 1</h1>
+      </header>
+
+      <main class="layout">
+        <section class="toolbar" role="group" aria-label="Переключение графика">
+          <button type="button" class="mode-button is-active" data-mode="function">Функция</button>
+          <button type="button" class="mode-button" data-mode="derivative">Производная</button>
+          <button type="button" class="mode-button" data-mode="integral">Первообразная</button>
+        </section>
+
+        <section class="card chart-card">
+          <div id="graph" class="graph" aria-label="График функции"></div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
