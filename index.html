@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Графики функции, производной и первообразной</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero card">
+        <div>
+          <p class="eyebrow">Мини-сайт без бэкенда</p>
+          <h1>Визуализатор функции, производной и первообразной</h1>
+          <p class="hero-text">
+            Введите своё математическое выражение, выберите режим отображения и сразу
+            получите графики на координатной плоскости.
+          </p>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel card controls-panel">
+          <div class="panel-header">
+            <h2>Параметры построения</h2>
+            <p>Поддерживаются выражения math.js: степени, тригонометрия, экспонента и другие функции.</p>
+          </div>
+
+          <form id="controls-form" class="controls-form" novalidate>
+            <label class="field-group" for="function-input">
+              <span>Функция f(x)</span>
+              <div class="input-row">
+                <input
+                  id="function-input"
+                  name="function"
+                  type="text"
+                  value="x^3 - 2*x^2 + x + 1"
+                  placeholder="Например: x^3 - 2*x^2 + x + 1"
+                  autocomplete="off"
+                />
+                <button type="button" id="example-button" class="ghost-button">Подставить пример</button>
+              </div>
+            </label>
+
+            <fieldset class="field-group mode-group">
+              <legend>Что показать</legend>
+              <div class="mode-options">
+                <label><input type="radio" name="display-mode" value="function" checked /> Исходная функция</label>
+                <label><input type="radio" name="display-mode" value="derivative" /> Производная</label>
+                <label><input type="radio" name="display-mode" value="integral" /> Первообразная</label>
+                <label><input type="radio" name="display-mode" value="all" /> Всё сразу</label>
+              </div>
+            </fieldset>
+
+            <div class="range-grid">
+              <label class="field-group" for="x-min">
+                <span>x_min</span>
+                <input id="x-min" name="x-min" type="number" value="-10" step="0.5" />
+              </label>
+              <label class="field-group" for="x-max">
+                <span>x_max</span>
+                <input id="x-max" name="x-max" type="number" value="10" step="0.5" />
+              </label>
+            </div>
+
+            <div class="button-row">
+              <button type="submit" class="primary-button">Построить</button>
+              <button type="button" id="reset-button" class="secondary-button">Сброс</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel card chart-panel">
+          <div class="panel-header">
+            <h2>График</h2>
+            <p>Первообразная рассчитывается численно как накопленный интеграл по точкам.</p>
+          </div>
+          <div id="graph" class="graph"></div>
+        </section>
+
+        <section class="panel card info-panel">
+          <div class="panel-header">
+            <h2>Подсказка по вводу</h2>
+            <p>Примеры корректных выражений:</p>
+          </div>
+          <ul class="hint-list">
+            <li><code>x^2</code></li>
+            <li><code>sin(x)</code></li>
+            <li><code>x^3 - 2*x + 1</code></li>
+            <li><code>exp(x)</code></li>
+          </ul>
+          <div id="values-card" class="values-card"></div>
+          <div id="message-box" class="message-box" aria-live="polite"></div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
