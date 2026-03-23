@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Графики функции, производной и первообразной</title>
+    <title>Визуализатор функции, производной и первообразной</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,93 +13,181 @@
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js" defer></script>
-    <script src="script.js" defer></script>
+    <script type="module" src="script.js"></script>
   </head>
   <body>
     <div class="page-shell">
-      <header class="hero card">
-        <div>
-          <p class="eyebrow">Мини-сайт без бэкенда</p>
-          <h1>Визуализатор функции, производной и первообразной</h1>
-          <p class="hero-text">
-            Введите своё математическое выражение, выберите режим отображения и сразу
-            получите графики на координатной плоскости.
-          </p>
+      <header class="hero">
+        <p class="eyebrow">HTML + CSS + JavaScript</p>
+        <div class="hero-content">
+          <div>
+            <h1>Визуализатор функции, производной и первообразной</h1>
+            <p class="hero-text">
+              Введите своё выражение, управляйте диапазоном, точкой анализа и набором графиков,
+              чтобы быстро исследовать поведение функции.
+            </p>
+          </div>
+          <div class="hero-note card soft-card">
+            <span class="hero-note-label">Важно</span>
+            <p>Первообразная строится численно по дискретным точкам и зависит от выбранного диапазона и sampleCount.</p>
+          </div>
         </div>
       </header>
 
       <main class="layout">
-        <section class="panel card controls-panel">
-          <div class="panel-header">
-            <h2>Параметры построения</h2>
-            <p>Поддерживаются выражения math.js: степени, тригонометрия, экспонента и другие функции.</p>
-          </div>
-
-          <form id="controls-form" class="controls-form" novalidate>
-            <label class="field-group" for="function-input">
-              <span>Функция f(x)</span>
-              <div class="input-row">
-                <input
-                  id="function-input"
-                  name="function"
-                  type="text"
-                  value="x^3 - 2*x^2 + x + 1"
-                  placeholder="Например: x^3 - 2*x^2 + x + 1"
-                  autocomplete="off"
-                />
-                <button type="button" id="example-button" class="ghost-button">Подставить пример</button>
-              </div>
-            </label>
-
-            <fieldset class="field-group mode-group">
-              <legend>Что показать</legend>
-              <div class="mode-options">
-                <label><input type="radio" name="display-mode" value="function" checked /> Исходная функция</label>
-                <label><input type="radio" name="display-mode" value="derivative" /> Производная</label>
-                <label><input type="radio" name="display-mode" value="integral" /> Первообразная</label>
-                <label><input type="radio" name="display-mode" value="all" /> Всё сразу</label>
-              </div>
-            </fieldset>
-
-            <div class="range-grid">
-              <label class="field-group" for="x-min">
-                <span>x_min</span>
-                <input id="x-min" name="x-min" type="number" value="-10" step="0.5" />
-              </label>
-              <label class="field-group" for="x-max">
-                <span>x_max</span>
-                <input id="x-max" name="x-max" type="number" value="10" step="0.5" />
-              </label>
+        <aside class="sidebar">
+          <section class="card section-card">
+            <div class="section-heading">
+              <h2>Функция</h2>
+              <p>Поддерживаются выражения math.js: степени, тригонометрия, экспонента, дроби и композиции функций.</p>
             </div>
 
-            <div class="button-row">
-              <button type="submit" class="primary-button">Построить</button>
-              <button type="button" id="reset-button" class="secondary-button">Сброс</button>
+            <form id="controls-form" class="form-grid" novalidate>
+              <section class="form-section" aria-labelledby="function-section-title">
+                <div class="section-title-row">
+                  <h3 id="function-section-title">Ввод функции</h3>
+                </div>
+
+                <label class="field-group" for="function-input">
+                  <span>Выражение f(x)</span>
+                  <input
+                    id="function-input"
+                    name="function"
+                    type="text"
+                    value="x^3 - 2*x^2 + x + 1"
+                    placeholder="Например: x^3 - 2*x^2 + x + 1"
+                    autocomplete="off"
+                  />
+                </label>
+              </section>
+
+              <section class="form-section" aria-labelledby="examples-section-title">
+                <div class="section-title-row">
+                  <h3 id="examples-section-title">Примеры</h3>
+                </div>
+
+                <div class="inline-fields">
+                  <label class="field-group" for="example-select">
+                    <span>Готовый пример</span>
+                    <select id="example-select" name="example"></select>
+                  </label>
+                  <button type="button" id="apply-example-button" class="secondary-button compact-button">Подставить</button>
+                </div>
+              </section>
+
+              <section class="form-section" aria-labelledby="range-section-title">
+                <div class="section-title-row">
+                  <h3 id="range-section-title">Диапазон и точность</h3>
+                </div>
+
+                <div class="triple-grid">
+                  <label class="field-group" for="x-min">
+                    <span>x_min</span>
+                    <input id="x-min" name="x-min" type="number" value="-10" step="0.5" />
+                  </label>
+                  <label class="field-group" for="x-max">
+                    <span>x_max</span>
+                    <input id="x-max" name="x-max" type="number" value="10" step="0.5" />
+                  </label>
+                  <label class="field-group" for="sample-count">
+                    <span>Точек sampleCount</span>
+                    <input id="sample-count" name="sample-count" type="number" value="401" min="50" max="3000" step="1" />
+                  </label>
+                </div>
+              </section>
+
+              <section class="form-section" aria-labelledby="display-section-title">
+                <div class="section-title-row">
+                  <h3 id="display-section-title">Отображаемые графики</h3>
+                </div>
+
+                <div class="toggle-grid" role="group" aria-label="Выбор графиков">
+                  <label class="toggle-option"><input id="show-function" name="show-function" type="checkbox" checked /> <span>Исходная функция f(x)</span></label>
+                  <label class="toggle-option"><input id="show-derivative" name="show-derivative" type="checkbox" checked /> <span>Производная f'(x)</span></label>
+                  <label class="toggle-option"><input id="show-integral" name="show-integral" type="checkbox" checked /> <span>Первообразная F(x)</span></label>
+                </div>
+              </section>
+
+              <section class="form-section" aria-labelledby="analysis-section-title">
+                <div class="section-title-row">
+                  <h3 id="analysis-section-title">Анализ точки</h3>
+                </div>
+
+                <div class="double-grid">
+                  <label class="field-group" for="reference-x">
+                    <span>Точка анализа x0</span>
+                    <input id="reference-x" name="reference-x" type="number" value="1" step="0.25" />
+                  </label>
+                  <label class="checkbox-row" for="auto-update">
+                    <input id="auto-update" name="auto-update" type="checkbox" checked />
+                    <span>Обновлять автоматически</span>
+                  </label>
+                </div>
+              </section>
+
+              <div class="button-row">
+                <button type="submit" class="primary-button">Построить график</button>
+                <button type="button" id="reset-button" class="secondary-button">Настройки по умолчанию</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="card section-card muted-card">
+            <div class="section-heading">
+              <h2>Ограничения</h2>
             </div>
-          </form>
-        </section>
+            <ul class="plain-list">
+              <li>Производная считается через math.js.</li>
+              <li>Первообразная строится численно по накопленному интегралу.</li>
+              <li>Не все выражения корректно определены на всём интервале.</li>
+            </ul>
+          </section>
+        </aside>
 
-        <section class="panel card chart-panel">
-          <div class="panel-header">
-            <h2>График</h2>
-            <p>Первообразная рассчитывается численно как накопленный интеграл по точкам.</p>
-          </div>
-          <div id="graph" class="graph"></div>
-        </section>
+        <section class="content-area">
+          <section class="card section-card chart-card">
+            <div class="section-heading chart-heading">
+              <div>
+                <h2>График</h2>
+                <p>Линии строятся по реальным вычисленным точкам без искусственного сглаживания.</p>
+              </div>
+              <button type="button" id="autoscale-button" class="ghost-button compact-button">Автомасштаб</button>
+            </div>
+            <div id="graph" class="graph" aria-label="График функции"></div>
+          </section>
 
-        <section class="panel card info-panel">
-          <div class="panel-header">
-            <h2>Подсказка по вводу</h2>
-            <p>Примеры корректных выражений:</p>
-          </div>
-          <ul class="hint-list">
-            <li><code>x^2</code></li>
-            <li><code>sin(x)</code></li>
-            <li><code>x^3 - 2*x + 1</code></li>
-            <li><code>exp(x)</code></li>
-          </ul>
-          <div id="values-card" class="values-card"></div>
-          <div id="message-box" class="message-box" aria-live="polite"></div>
+          <section class="info-grid">
+            <section class="card section-card">
+              <div class="section-heading">
+                <h2>Значения в точке x0</h2>
+                <p>Показываются значения функции, производной и численной первообразной.</p>
+              </div>
+              <div id="values-card" class="values-card" aria-live="polite"></div>
+            </section>
+
+            <section class="card section-card">
+              <div class="section-heading">
+                <h2>Подсказка по вводу</h2>
+                <p>Примеры корректных выражений:</p>
+              </div>
+              <ul class="hint-list">
+                <li><code>x^2</code></li>
+                <li><code>sin(x)</code></li>
+                <li><code>cos(x) + x</code></li>
+                <li><code>exp(x / 3)</code></li>
+                <li><code>x^4 - 4*x^2</code></li>
+                <li><code>1 / (x^2 + 1)</code></li>
+              </ul>
+            </section>
+          </section>
+
+          <section class="card section-card">
+            <div class="section-heading">
+              <h2>Сообщения</h2>
+              <p>Ошибки валидации и статус вычислений появляются здесь.</p>
+            </div>
+            <div id="message-box" class="message-box" aria-live="polite" aria-atomic="true"></div>
+          </section>
         </section>
       </main>
     </div>
