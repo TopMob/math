@@ -4,7 +4,7 @@ window.MathVisualizer = window.MathVisualizer || {};
   const { runMathPipeline } = window.MathVisualizer.mathEngine;
   const { renderPlot, bindViewportEvents, purgePlot } = window.MathVisualizer.plotManager;
   const { createInitialState, updateMode, updateViewport, validateState } = window.MathVisualizer.state;
-  const { getElements, renderActiveMode } = window.MathVisualizer.ui;
+  const { getElements, renderActiveMode, renderMetrics } = window.MathVisualizer.ui;
 
   function initApp() {
     const elements = getElements();
@@ -15,6 +15,8 @@ window.MathVisualizer = window.MathVisualizer || {};
       try {
         const validState = validateState(state);
         const datasets = runMathPipeline(validState);
+        renderActiveMode(elements, validState.mode);
+        renderMetrics(elements, validState, datasets);
         renderPlot(elements.graph, validState, datasets).then(() => {
           if (!viewportBound) {
             bindViewportEvents(elements.graph, (xMin, xMax) => {
@@ -46,7 +48,6 @@ window.MathVisualizer = window.MathVisualizer || {};
     elements.modeButtons.forEach((button) => {
       button.addEventListener('click', () => {
         state = updateMode(state, button.dataset.mode);
-        renderActiveMode(elements, state.mode);
         executePipeline();
       });
     });

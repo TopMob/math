@@ -2,7 +2,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
   const { APP_STATE } = window.MathVisualizer.config;
-  const availableModes = new Set(['function', 'derivative', 'integral']);
+  const availableModes = new Set(['function', 'derivative', 'integral', 'combo']);
 
   function createInitialState() {
     return {

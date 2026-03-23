@@ -2,127 +2,293 @@ window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
   const { PLOT_COLORS, MODE_LABELS } = window.MathVisualizer.config;
+  const { isFiniteNumber } = window.MathVisualizer.utils;
 
-  function createFunctionTrace(xValues, yValues) {
+  function createLineTrace({ color, hoverLabel, name, showLegend, x, y }) {
     return {
       type: 'scatter',
       mode: 'lines',
-      x: xValues,
-      y: yValues,
+      x,
+      y,
+      name,
+      showlegend: showLegend,
       line: {
-        color: PLOT_COLORS.function,
-        width: 3.5
+        color,
+        width: 3.4
       },
-      hovertemplate: 'f(x)<br>x=%{x:.5f}<br>y=%{y:.5f}<extra></extra>'
+      hovertemplate: `${hoverLabel}<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>`
     };
   }
 
-  function createDerivativeTrace(xValues, yValues) {
-    return {
-      type: 'scatter',
-      mode: 'lines',
-      x: xValues,
-      y: yValues,
-      line: {
-        color: PLOT_COLORS.derivative,
-        width: 3.5
-      },
-      hovertemplate: 'f′(x)<br>x=%{x:.5f}<br>y=%{y:.5f}<extra></extra>'
-    };
-  }
-
-  function createIntegralTrace(xValues, yValues) {
-    return {
-      type: 'scatter',
-      mode: 'lines',
-      x: xValues,
-      y: yValues,
-      line: {
-        color: PLOT_COLORS.integral,
-        width: 3.5
-      },
-      hovertemplate: 'F(x)<br>x=%{x:.5f}<br>y=%{y:.5f}<extra></extra>'
-    };
-  }
-
-  function createExtremumMarkers(extrema) {
+  function createMarkerTrace({ x, y, color, name, hovertemplate, size = 10 }) {
     return {
       type: 'scatter',
       mode: 'markers',
-      x: extrema.map((point) => point.x),
-      y: extrema.map((point) => point.y),
+      x,
+      y,
+      name,
+      showlegend: false,
       marker: {
-        size: 10,
-        color: PLOT_COLORS.extrema,
+        size,
+        color,
         line: {
           width: 1.5,
-          color: '#111827'
+          color: '#081224'
         }
       },
-      hovertemplate: 'Экстремум<br>x=%{x:.5f}<br>y=%{y:.5f}<extra></extra>'
+      hovertemplate
     };
   }
 
-  function buildTraces(state, datasets) {
-    if (state.mode === 'function') {
-      const traces = [createFunctionTrace(datasets.xValues, datasets.series.function)];
-      if (datasets.extrema.length > 0) {
-        traces.push(createExtremumMarkers(datasets.extrema));
+  function getBaseSeries(mode, datasets) {
+    if (mode === 'combo') {
+      return [
+        {
+          name: 'Функция',
+          hoverLabel: 'f(x)',
+          color: PLOT_COLORS.function,
+          values: datasets.series.function
+        },
+        {
+          name: 'Производная',
+          hoverLabel: 'f′(x)',
+          color: PLOT_COLORS.derivative,
+          values: datasets.series.derivative
+        },
+        {
+          name: 'Первообразная',
+          hoverLabel: 'F(x)',
+          color: PLOT_COLORS.integral,
+          values: datasets.series.integral
+        }
+      ];
+    }
+
+    return [
+      {
+        name: MODE_LABELS[mode],
+        hoverLabel: mode === 'function' ? 'f(x)' : mode === 'derivative' ? 'f′(x)' : 'F(x)',
+        color: PLOT_COLORS[mode],
+        values: datasets.series[mode]
       }
-      return traces;
-    }
-
-    if (state.mode === 'derivative') {
-      return [createDerivativeTrace(datasets.xValues, datasets.series.derivative)];
-    }
-
-    return [createIntegralTrace(datasets.xValues, datasets.series.integral)];
+    ];
   }
 
-  function buildLayout(state) {
+  function splitSeriesAroundZero(xValues, yValues, zeroIndex) {
+    const left = [];
+    const right = [];
+
+    for (let index = zeroIndex; index >= 0; index -= 1) {
+      if (isFiniteNumber(yValues[index])) {
+        left.push({ x: xValues[index], y: yValues[index] });
+      }
+    }
+
+    for (let index = zeroIndex + 1; index < xValues.length; index += 1) {
+      if (isFiniteNumber(yValues[index])) {
+        right.push({ x: xValues[index], y: yValues[index] });
+      }
+    }
+
+    return {
+      x: [...left.map((point) => point.x), null, ...right.map((point) => point.x)],
+      y: [...left.map((point) => point.y), null, ...right.map((point) => point.y)]
+    };
+  }
+
+  function gatherRangeValues(mode, datasets) {
+    if (mode === 'combo') {
+      return [
+        ...datasets.series.function,
+        ...datasets.series.derivative,
+        ...datasets.series.integral
+      ].filter(isFiniteNumber);
+    }
+
+    return datasets.series[mode].filter(isFiniteNumber);
+  }
+
+  function computeSmartYRange(mode, datasets) {
+    const finiteValues = gatherRangeValues(mode, datasets);
+    if (finiteValues.length === 0) {
+      return [-6, 6];
+    }
+
+    const sorted = [...finiteValues].sort((left, right) => left - right);
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+    const low = sorted[Math.floor((sorted.length - 1) * 0.14)];
+    const high = sorted[Math.floor((sorted.length - 1) * 0.86)];
+    const rawSpan = Math.max(max - min, 1e-6);
+    const focusedSpan = Math.max(high - low, 1e-6);
+    const useFocused = rawSpan / focusedSpan > 2.5;
+    const lower = useFocused ? low : min;
+    const upper = useFocused ? high : max;
+    const span = Math.max(upper - lower, 1e-6);
+    const padding = Math.max(span * 0.12, 1);
+
+    return [Math.min(lower - padding, -2), Math.max(upper + padding, 2)];
+  }
+
+  function getNiceStep(span, targetLines) {
+    const rawStep = Math.max(span / targetLines, 1);
+    const power = 10 ** Math.floor(Math.log10(rawStep));
+    const normalized = rawStep / power;
+
+    if (normalized <= 1) {
+      return 1 * power;
+    }
+
+    if (normalized <= 2) {
+      return 2 * power;
+    }
+
+    if (normalized <= 5) {
+      return 5 * power;
+    }
+
+    return 10 * power;
+  }
+
+  function buildLayout(state, datasets) {
+    const yRange = computeSmartYRange(state.mode, datasets);
+    const isCombo = state.mode === 'combo';
+    const xSpan = state.viewport.xMax - state.viewport.xMin;
+
     return {
       paper_bgcolor: 'rgba(0,0,0,0)',
-      plot_bgcolor: 'rgba(2, 6, 23, 0.18)',
+      plot_bgcolor: 'rgba(5, 26, 18, 0.18)',
       font: {
-        color: '#e2e8f0',
+        color: '#dbeafe',
         family: 'Inter, sans-serif'
       },
       margin: {
-        t: 12,
-        r: 12,
-        b: 44,
-        l: 54
+        t: 24,
+        r: 20,
+        b: 58,
+        l: 72
       },
-      showlegend: false,
+      showlegend: isCombo,
+      legend: {
+        x: 1,
+        xanchor: 'right',
+        y: 1,
+        bgcolor: PLOT_COLORS.legendBg,
+        bordercolor: 'rgba(96, 165, 250, 0.22)',
+        borderwidth: 1,
+        font: {
+          color: PLOT_COLORS.comboText,
+          size: 12
+        }
+      },
       dragmode: 'pan',
       hovermode: 'closest',
+      uirevision: `${state.mode}-viewport`,
       xaxis: {
-        title: 'x',
+        title: 'X',
         range: [state.viewport.xMin, state.viewport.xMax],
-        gridcolor: 'rgba(148, 163, 184, 0.14)',
-        zerolinecolor: 'rgba(148, 163, 184, 0.28)',
-        showspikes: true,
-        spikemode: 'across'
+        tickmode: 'linear',
+        tick0: 0,
+        dtick: getNiceStep(xSpan, 10),
+        gridcolor: PLOT_COLORS.grid,
+        zerolinecolor: PLOT_COLORS.axisStrong,
+        zerolinewidth: 2,
+        tickcolor: 'rgba(96, 165, 250, 0.24)',
+        linecolor: PLOT_COLORS.axis,
+        linewidth: 2,
+        showline: true
       },
       yaxis: {
-        title: MODE_LABELS[state.mode],
-        autorange: true,
-        gridcolor: 'rgba(148, 163, 184, 0.14)',
-        zerolinecolor: 'rgba(148, 163, 184, 0.28)',
+        title: 'Y',
+        range: yRange,
+        tickmode: 'linear',
+        tick0: 0,
+        dtick: getNiceStep(yRange[1] - yRange[0], 12),
+        gridcolor: PLOT_COLORS.grid,
+        zerolinecolor: PLOT_COLORS.axisStrong,
+        zerolinewidth: 2,
+        tickcolor: 'rgba(96, 165, 250, 0.24)',
+        linecolor: PLOT_COLORS.axis,
+        linewidth: 2,
+        showline: true,
         automargin: true
-      }
+      },
+      shapes: [
+        {
+          type: 'line',
+          x0: state.viewport.xMin,
+          x1: state.viewport.xMax,
+          y0: 0,
+          y1: 0,
+          line: {
+            color: PLOT_COLORS.axisStrong,
+            width: 2
+          }
+        },
+        {
+          type: 'line',
+          x0: 0,
+          x1: 0,
+          y0: yRange[0],
+          y1: yRange[1],
+          line: {
+            color: PLOT_COLORS.axisStrong,
+            width: 2
+          }
+        }
+      ]
     };
   }
 
+  function buildPlotModel(state, datasets) {
+    const baseSeries = getBaseSeries(state.mode, datasets);
+    const lineTraces = baseSeries.map((series) => {
+      const points = splitSeriesAroundZero(datasets.xValues, series.values, datasets.zeroIndex);
+
+      return createLineTrace({
+        color: series.color,
+        hoverLabel: series.hoverLabel,
+        name: series.name,
+        showLegend: state.mode === 'combo',
+        x: points.x,
+        y: points.y
+      });
+    });
+
+    const extras = [
+      createMarkerTrace({
+        x: [0],
+        y: [0],
+        color: PLOT_COLORS.origin,
+        name: 'Начало координат',
+        hovertemplate: 'Начало координат<br>x=0<br>y=0<extra></extra>',
+        size: 8
+      })
+    ];
+
+    if (state.mode === 'function' && datasets.extrema.length > 0) {
+      extras.push(createMarkerTrace({
+        x: datasets.extrema.map((point) => point.x),
+        y: datasets.extrema.map((point) => point.y),
+        color: PLOT_COLORS.extrema,
+        name: 'Экстремумы',
+        hovertemplate: 'Экстремум<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>',
+        size: 10
+      }));
+    }
+
+    return [...lineTraces, ...extras];
+  }
+
   function renderPlot(graphElement, state, datasets) {
-    const traces = buildTraces(state, datasets);
-    const layout = buildLayout(state);
+    const traces = buildPlotModel(state, datasets);
+    const layout = buildLayout(state, datasets);
     const config = {
       responsive: true,
       displaylogo: false,
       scrollZoom: true,
       doubleClick: 'reset',
-      modeBarButtonsToRemove: ['select2d', 'lasso2d']
+      modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d']
     };
 
     return window.Plotly.react(graphElement, traces, layout, config);

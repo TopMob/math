@@ -38,24 +38,38 @@ window.MathVisualizer = window.MathVisualizer || {};
   }
 
   function computeIntegralSeries(xValues, functionValues) {
-    const integralValues = [0];
-    let lastFiniteIntegral = 0;
+    const zeroIndex = getZeroSplitIndex(xValues);
+    const integralValues = new Array(xValues.length).fill(null);
+    integralValues[zeroIndex] = 0;
 
-    for (let index = 1; index < xValues.length; index += 1) {
+    let forwardIntegral = 0;
+    for (let index = zeroIndex + 1; index < xValues.length; index += 1) {
       const xStep = xValues[index] - xValues[index - 1];
       const previousY = functionValues[index - 1];
       const currentY = functionValues[index];
-      const previousIntegral = integralValues[index - 1];
 
       if (!isFiniteNumber(previousY) || !isFiniteNumber(currentY)) {
-        integralValues.push(null);
+        integralValues[index] = null;
         continue;
       }
 
-      const baseIntegral = isFiniteNumber(previousIntegral) ? previousIntegral : lastFiniteIntegral;
-      const nextIntegral = baseIntegral + ((previousY + currentY) * xStep) / 2;
-      integralValues.push(nextIntegral);
-      lastFiniteIntegral = nextIntegral;
+      forwardIntegral += ((previousY + currentY) * xStep) / 2;
+      integralValues[index] = forwardIntegral;
+    }
+
+    let backwardIntegral = 0;
+    for (let index = zeroIndex - 1; index >= 0; index -= 1) {
+      const xStep = xValues[index + 1] - xValues[index];
+      const leftY = functionValues[index];
+      const rightY = functionValues[index + 1];
+
+      if (!isFiniteNumber(leftY) || !isFiniteNumber(rightY)) {
+        integralValues[index] = null;
+        continue;
+      }
+
+      backwardIntegral -= ((leftY + rightY) * xStep) / 2;
+      integralValues[index] = backwardIntegral;
     }
 
     return integralValues;
@@ -153,6 +167,40 @@ window.MathVisualizer = window.MathVisualizer || {};
     return extrema;
   }
 
+  function getZeroSplitIndex(xValues) {
+    let bestIndex = 0;
+    let bestDistance = Number.POSITIVE_INFINITY;
+
+    xValues.forEach((value, index) => {
+      const distance = Math.abs(value);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = index;
+      }
+    });
+
+    return bestIndex;
+  }
+
+  function computeSeriesStats(xValues, values) {
+    const visibleValues = values.filter(isFiniteNumber);
+    if (visibleValues.length === 0) {
+      return {
+        min: null,
+        max: null,
+        atZero: null
+      };
+    }
+
+    const zeroIndex = getZeroSplitIndex(xValues);
+
+    return {
+      min: Math.min(...visibleValues),
+      max: Math.max(...visibleValues),
+      atZero: isFiniteNumber(values[zeroIndex]) ? values[zeroIndex] : null
+    };
+  }
+
   function runMathPipeline(state) {
     const { xMin, xMax } = state.viewport;
     const xValues = buildXValues(xMin, xMax, state.sampleCount);
@@ -166,10 +214,16 @@ window.MathVisualizer = window.MathVisualizer || {};
 
     return {
       xValues,
+      zeroIndex: getZeroSplitIndex(xValues),
       series: {
         function: functionValues,
         derivative: derivativeValues,
         integral: integralValues
+      },
+      stats: {
+        function: computeSeriesStats(xValues, functionValues),
+        derivative: computeSeriesStats(xValues, derivativeValues),
+        integral: computeSeriesStats(xValues, integralValues)
       },
       extrema
     };
