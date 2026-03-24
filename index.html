@@ -6,10 +6,7 @@
     <title>Графики функции, производной и первообразной</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js" defer></script>
@@ -24,43 +21,11 @@
   </head>
   <body>
     <div class="page-shell">
-      <div class="background-orb background-orb-left"></div>
-      <div class="background-orb background-orb-right"></div>
-      <div class="background-grid"></div>
-
       <header class="hero card reveal reveal-delay-1">
         <div class="hero-copy">
-          <span class="hero-kicker">Математическая сцена</span>
-          <h1 aria-label="x в кубе минус 2 икс в квадрате плюс икс плюс 1">x<sup>3</sup> − 2x<sup>2</sup> + x + 1</h1>
-          <p class="hero-description">
-            Плавная световая сцена, быстрые переключения режимов и более информативные подсказки
-            по текущему состоянию графика без лишнего визуального шума.
-          </p>
-          <div class="hero-highlights" aria-label="Ключевые особенности интерфейса">
-            <span class="highlight-pill">Плавные анимации</span>
-            <span class="highlight-pill">Живые метрики</span>
-            <span class="highlight-pill">Чистая координатная плоскость</span>
-          </div>
-        </div>
-
-        <div class="hero-side">
-          <div class="formula-pill">f(x) = x³ − 2x² + x + 1</div>
-          <div class="info-grid">
-            <article class="info-card reveal reveal-delay-2">
-              <span class="info-label">Режим</span>
-              <strong id="modeTitle">Функция</strong>
-              <p id="modeDescription">Исходная кривая с выделенными осями и считываемой сеткой.</p>
-            </article>
-            <article class="info-card info-card-accent reveal reveal-delay-3">
-              <span class="info-label">Обзор</span>
-              <strong id="sceneRange">Окно: −4.5 … 4.5</strong>
-              <p id="sceneHint">Панорамируйте или масштабируйте сцену, чтобы пересчитать метрики под новое окно.</p>
-              <div class="scene-meta" aria-label="Технические параметры сцены">
-                <span class="scene-chip" id="sceneDensity">501 точка</span>
-                <span class="scene-chip" id="sceneFocus">Акцент на функции</span>
-              </div>
-            </article>
-          </div>
+          <h1>f(x) = x<sup>3</sup> − 2x<sup>2</sup> + x + 1</h1>
+          <p id="sceneRange">Окно: −4.5 … 4.5 | Y: −20 … 40</p>
+          <p id="sceneDensity">501 точка</p>
         </div>
       </header>
 
@@ -72,8 +37,6 @@
             <button type="button" class="mode-button" data-mode="integral">Первообразная</button>
             <button type="button" class="mode-button mode-button-combo" data-mode="combo">3 в 1</button>
           </div>
-
-
 
           <div class="axis-editor" aria-label="Ручная настройка диапазона графика">
             <div class="axis-editor-row axis-editor-row-grid">
@@ -96,31 +59,14 @@
             </div>
             <div class="axis-editor-row">
               <button type="button" class="mode-button" id="applyViewportButton">Применить диапазон</button>
-              <button type="button" class="mode-button" id="fitYButton">Подобрать Y по данным</button>
+              <button type="button" class="mode-button" id="fitYButton">Подобрать Y</button>
             </div>
-          </div>
-
-          <div class="insight-strip" aria-label="Ключевые показатели графика">
-            <article class="metric-card">
-              <span class="metric-label" id="metricPrimaryLabel">Значение при x = 0</span>
-              <strong class="metric-value" id="metricPrimary">—</strong>
-            </article>
-            <article class="metric-card">
-              <span class="metric-label" id="metricSecondaryLabel">Наклон в нуле</span>
-              <strong class="metric-value" id="metricSlope">—</strong>
-            </article>
-            <article class="metric-card">
-              <span class="metric-label" id="metricTertiaryLabel">Экстремумы в окне</span>
-              <strong class="metric-value" id="metricExtrema">—</strong>
-            </article>
           </div>
         </section>
 
         <section class="card chart-card reveal reveal-delay-5">
           <div class="chart-shell">
-            <div class="chart-glow chart-glow-left"></div>
-            <div class="chart-glow chart-glow-right"></div>
-            <div class="chart-status" id="chartStatus">График обновлён</div>
+            <div class="chart-status" id="chartStatus">Готово</div>
             <div id="graph" class="graph" aria-label="График функции"></div>
           </div>
         </section>

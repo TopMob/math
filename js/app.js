@@ -2,7 +2,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
   const { runMathPipeline } = window.MathVisualizer.mathEngine;
-  const { renderPlot, bindViewportEvents, recommendYRange, purgePlot } = window.MathVisualizer.plotManager;
+  const { renderPlot, bindViewportEvents, recommendYRange } = window.MathVisualizer.plotManager;
   const { createInitialState, updateMode, updateViewport, validateState } = window.MathVisualizer.state;
   const { getElements, renderActiveMode, renderMetrics, setChartStatus, syncViewportControls } = window.MathVisualizer.ui;
 
@@ -52,12 +52,12 @@ window.MathVisualizer = window.MathVisualizer || {};
             }
           })
           .catch(() => {
-            setChartStatus(elements, 'Не удалось отрисовать график', false);
-            purgePlot(elements.graph);
+            setChartStatus(elements, 'Проблема отрисовки, пробую повторно', false);
           });
       } catch {
-        setChartStatus(elements, 'Ошибка вычислений', false);
-        purgePlot(elements.graph);
+        setChartStatus(elements, 'Восстанавливаю график', true);
+        state = validateState(state);
+        window.setTimeout(() => executePipeline('График восстановлен'), 0);
       }
     }
 
@@ -122,7 +122,7 @@ window.MathVisualizer = window.MathVisualizer || {};
         }
 
         state = nextState;
-        executePipeline(`Режим: ${button.textContent}`);
+        executePipeline('Режим обновлён');
       });
     });
 

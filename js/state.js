@@ -22,22 +22,25 @@ window.MathVisualizer = window.MathVisualizer || {};
     };
   }
 
+  function normalizeViewport(viewport) {
+    const safeXMin = Number.isFinite(viewport.xMin) ? viewport.xMin : APP_STATE.viewport.xMin;
+    const safeXMax = Number.isFinite(viewport.xMax) ? viewport.xMax : APP_STATE.viewport.xMax;
+    const safeYMin = Number.isFinite(viewport.yMin) ? viewport.yMin : APP_STATE.viewport.yMin;
+    const safeYMax = Number.isFinite(viewport.yMax) ? viewport.yMax : APP_STATE.viewport.yMax;
+
+    const xMin = Math.min(safeXMin, safeXMax - 1e-6);
+    const xMax = Math.max(safeXMax, safeXMin + 1e-6);
+    const yMin = Math.min(safeYMin, safeYMax - 1e-6);
+    const yMax = Math.max(safeYMax, safeYMin + 1e-6);
+
+    return { xMin, xMax, yMin, yMax };
+  }
+
   function updateViewport(state, patch) {
-    const nextViewport = {
+    const nextViewport = normalizeViewport({
       ...state.viewport,
       ...patch
-    };
-
-    if (
-      !Number.isFinite(nextViewport.xMin)
-      || !Number.isFinite(nextViewport.xMax)
-      || !Number.isFinite(nextViewport.yMin)
-      || !Number.isFinite(nextViewport.yMax)
-      || nextViewport.xMin >= nextViewport.xMax
-      || nextViewport.yMin >= nextViewport.yMax
-    ) {
-      return state;
-    }
+    });
 
     if (
       nextViewport.xMin === state.viewport.xMin
@@ -55,26 +58,15 @@ window.MathVisualizer = window.MathVisualizer || {};
   }
 
   function validateState(state) {
-    if (!availableModes.has(state.mode)) {
-      throw new Error('Не выбран режим отображения.');
-    }
+    const mode = availableModes.has(state.mode) ? state.mode : APP_STATE.mode;
+    const sampleCount = Number.isInteger(state.sampleCount) && state.sampleCount > 1 ? state.sampleCount : APP_STATE.sampleCount;
 
-    if (
-      !Number.isFinite(state.viewport.xMin)
-      || !Number.isFinite(state.viewport.xMax)
-      || !Number.isFinite(state.viewport.yMin)
-      || !Number.isFinite(state.viewport.yMax)
-      || state.viewport.xMin >= state.viewport.xMax
-      || state.viewport.yMin >= state.viewport.yMax
-    ) {
-      throw new Error('Некорректный диапазон графика.');
-    }
-
-    if (!Number.isInteger(state.sampleCount) || state.sampleCount < 2) {
-      throw new Error('Некорректная плотность выборки.');
-    }
-
-    return state;
+    return {
+      ...state,
+      mode,
+      sampleCount,
+      viewport: normalizeViewport(state.viewport)
+    };
   }
 
   window.MathVisualizer.state = {
