@@ -380,7 +380,7 @@ h1 {
 
 .axis-editor-row-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .axis-field {
@@ -426,6 +426,12 @@ h1 {
   margin: 0;
   width: 18px;
   height: 18px;
+}
+
+
+.axis-editor .mode-button {
+  min-height: 44px;
+  width: 100%;
 }
 
 .axis-chip {
@@ -623,7 +629,7 @@ h1 {
   }
 
   .axis-editor-row-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -640,6 +646,10 @@ h1 {
   }
 
   .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .axis-editor-row-grid {
     grid-template-columns: 1fr;
   }
 

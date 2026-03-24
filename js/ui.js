@@ -35,21 +35,20 @@ window.MathVisualizer = window.MathVisualizer || {};
       sceneFocus: requireElement('sceneFocus'),
       sceneHint: requireElement('sceneHint'),
       chartStatus: requireElement('chartStatus'),
-      yScaleSlider: requireElement('yScaleSlider'),
-      yScaleValue: requireElement('yScaleValue'),
+      xMinInput: requireElement('xMinInput'),
+      xMaxInput: requireElement('xMaxInput'),
+      yMinInput: requireElement('yMinInput'),
       yMaxInput: requireElement('yMaxInput'),
-      aspectLockToggle: requireElement('aspectLockToggle'),
-      yPerXInput: requireElement('yPerXInput')
+      applyViewportButton: requireElement('applyViewportButton'),
+      fitYButton: requireElement('fitYButton')
     };
   }
 
-  function syncAxisControls(elements, axisSettings) {
-    elements.yScaleSlider.value = String(axisSettings.yScale);
-    elements.yScaleValue.textContent = `${Math.round(axisSettings.yScale * 100)}%`;
-    elements.yMaxInput.value = String(Math.round(axisSettings.yMaxAbs));
-    elements.aspectLockToggle.checked = axisSettings.lockAspect;
-    elements.yPerXInput.value = String(axisSettings.yPerX);
-    elements.yPerXInput.disabled = !axisSettings.lockAspect;
+  function syncViewportControls(elements, viewport) {
+    elements.xMinInput.value = String(viewport.xMin);
+    elements.xMaxInput.value = String(viewport.xMax);
+    elements.yMinInput.value = String(viewport.yMin);
+    elements.yMaxInput.value = String(viewport.yMax);
   }
 
   function formatPointCount(sampleCount) {
@@ -76,11 +75,10 @@ window.MathVisualizer = window.MathVisualizer || {};
 
     elements.modeTitle.textContent = modeDetails.title;
     elements.modeDescription.textContent = modeDetails.description;
-    elements.sceneRange.textContent = `Окно: ${formatNumber(state.viewport.xMin)} … ${formatNumber(state.viewport.xMax)}`;
+    elements.sceneRange.textContent = `Окно: ${formatNumber(state.viewport.xMin)} … ${formatNumber(state.viewport.xMax)} | Y: ${formatNumber(state.viewport.yMin)} … ${formatNumber(state.viewport.yMax)}`;
     elements.sceneDensity.textContent = formatPointCount(state.sampleCount);
     elements.sceneFocus.textContent = modeDetails.focus;
     elements.sceneHint.textContent = modeDetails.status;
-    syncAxisControls(elements, state.axisSettings);
   }
 
   function renderModeMetrics(elements, config) {
@@ -167,8 +165,8 @@ window.MathVisualizer = window.MathVisualizer || {};
   window.MathVisualizer.ui = {
     getElements,
     renderActiveMode,
+    syncViewportControls,
     renderMetrics,
-    setChartStatus,
-    syncAxisControls
+    setChartStatus
   };
 })();

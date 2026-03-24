@@ -75,27 +75,28 @@
 
 
 
-          <div class="axis-editor" aria-label="Ручная настройка масштаба осей">
-            <div class="axis-editor-row">
-              <label class="axis-field" for="yScaleSlider">
-                <span class="axis-label">Сжатие Y</span>
-                <input id="yScaleSlider" type="range" min="0.03" max="1" step="0.01" value="0.24" />
-              </label>
-              <span class="axis-chip" id="yScaleValue">24%</span>
-            </div>
+          <div class="axis-editor" aria-label="Ручная настройка диапазона графика">
             <div class="axis-editor-row axis-editor-row-grid">
+              <label class="axis-field" for="xMinInput">
+                <span class="axis-label">X min</span>
+                <input id="xMinInput" type="number" step="0.1" value="-4.5" />
+              </label>
+              <label class="axis-field" for="xMaxInput">
+                <span class="axis-label">X max</span>
+                <input id="xMaxInput" type="number" step="0.1" value="4.5" />
+              </label>
+              <label class="axis-field" for="yMinInput">
+                <span class="axis-label">Y min</span>
+                <input id="yMinInput" type="number" step="0.1" value="-20" />
+              </label>
               <label class="axis-field" for="yMaxInput">
-                <span class="axis-label">Макс |Y|</span>
-                <input id="yMaxInput" type="number" min="20" max="2000000" step="10" value="220" />
+                <span class="axis-label">Y max</span>
+                <input id="yMaxInput" type="number" step="0.1" value="40" />
               </label>
-              <label class="axis-field axis-field-checkbox" for="aspectLockToggle">
-                <input id="aspectLockToggle" type="checkbox" />
-                <span class="axis-label">Фиксировать X/Y</span>
-              </label>
-              <label class="axis-field" for="yPerXInput">
-                <span class="axis-label">Y на 1 X</span>
-                <input id="yPerXInput" type="number" min="0.05" max="200" step="0.05" value="2.5" />
-              </label>
+            </div>
+            <div class="axis-editor-row">
+              <button type="button" class="mode-button" id="applyViewportButton">Применить диапазон</button>
+              <button type="button" class="mode-button" id="fitYButton">Подобрать Y по данным</button>
             </div>
           </div>
 

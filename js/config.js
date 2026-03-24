@@ -7,15 +7,11 @@ window.MathVisualizer.config = {
     mode: 'function',
     viewport: {
       xMin: -4.5,
-      xMax: 4.5
+      xMax: 4.5,
+      yMin: -20,
+      yMax: 40
     },
-    sampleCount: 501,
-    axisSettings: {
-      yScale: 0.24,
-      yMaxAbs: 220,
-      lockAspect: false,
-      yPerX: 2.5
-    }
+    sampleCount: 501
   },
   MODE_LABELS: {
     function: 'Функция',

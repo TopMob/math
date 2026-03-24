@@ -7,8 +7,7 @@ window.MathVisualizer = window.MathVisualizer || {};
   function createInitialState() {
     return {
       ...APP_STATE,
-      viewport: { ...APP_STATE.viewport },
-      axisSettings: { ...APP_STATE.axisSettings }
+      viewport: { ...APP_STATE.viewport }
     };
   }
 
@@ -23,49 +22,35 @@ window.MathVisualizer = window.MathVisualizer || {};
     };
   }
 
-  function updateViewport(state, xMin, xMax) {
-    if (!Number.isFinite(xMin) || !Number.isFinite(xMax) || xMin >= xMax) {
-      return state;
-    }
-
-    return {
-      ...state,
-      viewport: {
-        xMin,
-        xMax
-      }
-    };
-  }
-
-  function clampValue(value, min, max, fallback) {
-    if (!Number.isFinite(value)) {
-      return fallback;
-    }
-
-    return Math.min(max, Math.max(min, value));
-  }
-
-  function updateAxisSettings(state, patch) {
-    const current = state.axisSettings;
-    const next = {
-      yScale: clampValue(patch.yScale ?? current.yScale, 0.03, 1, current.yScale),
-      yMaxAbs: clampValue(patch.yMaxAbs ?? current.yMaxAbs, 20, 2000000, current.yMaxAbs),
-      lockAspect: Boolean(patch.lockAspect ?? current.lockAspect),
-      yPerX: clampValue(patch.yPerX ?? current.yPerX, 0.05, 200, current.yPerX)
+  function updateViewport(state, patch) {
+    const nextViewport = {
+      ...state.viewport,
+      ...patch
     };
 
     if (
-      next.yScale === current.yScale
-      && next.yMaxAbs === current.yMaxAbs
-      && next.lockAspect === current.lockAspect
-      && next.yPerX === current.yPerX
+      !Number.isFinite(nextViewport.xMin)
+      || !Number.isFinite(nextViewport.xMax)
+      || !Number.isFinite(nextViewport.yMin)
+      || !Number.isFinite(nextViewport.yMax)
+      || nextViewport.xMin >= nextViewport.xMax
+      || nextViewport.yMin >= nextViewport.yMax
+    ) {
+      return state;
+    }
+
+    if (
+      nextViewport.xMin === state.viewport.xMin
+      && nextViewport.xMax === state.viewport.xMax
+      && nextViewport.yMin === state.viewport.yMin
+      && nextViewport.yMax === state.viewport.yMax
     ) {
       return state;
     }
 
     return {
       ...state,
-      axisSettings: next
+      viewport: nextViewport
     };
   }
 
@@ -74,16 +59,19 @@ window.MathVisualizer = window.MathVisualizer || {};
       throw new Error('Не выбран режим отображения.');
     }
 
-    if (!Number.isFinite(state.viewport.xMin) || !Number.isFinite(state.viewport.xMax) || state.viewport.xMin >= state.viewport.xMax) {
+    if (
+      !Number.isFinite(state.viewport.xMin)
+      || !Number.isFinite(state.viewport.xMax)
+      || !Number.isFinite(state.viewport.yMin)
+      || !Number.isFinite(state.viewport.yMax)
+      || state.viewport.xMin >= state.viewport.xMax
+      || state.viewport.yMin >= state.viewport.yMax
+    ) {
       throw new Error('Некорректный диапазон графика.');
     }
 
     if (!Number.isInteger(state.sampleCount) || state.sampleCount < 2) {
       throw new Error('Некорректная плотность выборки.');
-    }
-
-    if (!state.axisSettings || !Number.isFinite(state.axisSettings.yScale) || !Number.isFinite(state.axisSettings.yMaxAbs) || !Number.isFinite(state.axisSettings.yPerX)) {
-      throw new Error('Некорректные настройки осей.');
     }
 
     return state;
@@ -93,7 +81,6 @@ window.MathVisualizer = window.MathVisualizer || {};
     createInitialState,
     updateMode,
     updateViewport,
-    updateAxisSettings,
     validateState
   };
 })();

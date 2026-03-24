@@ -2,12 +2,15 @@ window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
   const { runMathPipeline } = window.MathVisualizer.mathEngine;
-  const { renderPlot, bindViewportEvents, purgePlot } = window.MathVisualizer.plotManager;
-  const { createInitialState, updateMode, updateViewport, updateAxisSettings, validateState } = window.MathVisualizer.state;
-  const { getElements, renderActiveMode, renderMetrics, setChartStatus } = window.MathVisualizer.ui;
+  const { renderPlot, bindViewportEvents, recommendYRange, purgePlot } = window.MathVisualizer.plotManager;
+  const { createInitialState, updateMode, updateViewport, validateState } = window.MathVisualizer.state;
+  const { getElements, renderActiveMode, renderMetrics, setChartStatus, syncViewportControls } = window.MathVisualizer.ui;
 
   function isViewportChanged(currentViewport, nextViewport) {
-    return Math.abs(currentViewport.xMin - nextViewport.xMin) > 1e-7 || Math.abs(currentViewport.xMax - nextViewport.xMax) > 1e-7;
+    return Math.abs(currentViewport.xMin - nextViewport.xMin) > 1e-7
+      || Math.abs(currentViewport.xMax - nextViewport.xMax) > 1e-7
+      || Math.abs(currentViewport.yMin - nextViewport.yMin) > 1e-7
+      || Math.abs(currentViewport.yMax - nextViewport.yMax) > 1e-7;
   }
 
   function initApp() {
@@ -15,26 +18,28 @@ window.MathVisualizer = window.MathVisualizer || {};
     let state = createInitialState();
     let viewportBound = false;
     let viewportTimer = null;
-    let axisTimer = null;
+    let lastDatasets = null;
 
     function executePipeline(statusText = 'График обновлён') {
       try {
         const validState = validateState(state);
         setChartStatus(elements, 'Обновляю сцену…', true);
         const datasets = runMathPipeline(validState);
+        lastDatasets = datasets;
         renderActiveMode(elements, validState.mode, {
           ...validState,
           sampleCount: datasets.sampleCount
         });
+        syncViewportControls(elements, validState.viewport);
         renderMetrics(elements, validState, datasets);
         renderPlot(elements.graph, validState, datasets)
           .then(() => {
             setChartStatus(elements, statusText, false);
             if (!viewportBound) {
-              bindViewportEvents(elements.graph, (xMin, xMax) => {
+              bindViewportEvents(elements.graph, (nextViewport) => {
                 window.clearTimeout(viewportTimer);
                 viewportTimer = window.setTimeout(() => {
-                  const nextState = updateViewport(state, xMin, xMax);
+                  const nextState = updateViewport(state, nextViewport);
                   if (!isViewportChanged(state.viewport, nextState.viewport)) {
                     return;
                   }
@@ -56,40 +61,37 @@ window.MathVisualizer = window.MathVisualizer || {};
       }
     }
 
-    function commitAxisPatch(patch, statusText) {
-      const nextState = updateAxisSettings(state, patch);
-      if (nextState === state) {
-        return;
-      }
+    function bindViewportControls() {
+      elements.applyViewportButton.addEventListener('click', () => {
+        const nextState = updateViewport(state, {
+          xMin: Number(elements.xMinInput.value),
+          xMax: Number(elements.xMaxInput.value),
+          yMin: Number(elements.yMinInput.value),
+          yMax: Number(elements.yMaxInput.value)
+        });
 
-      state = nextState;
-      executePipeline(statusText);
-    }
+        if (nextState === state) {
+          return;
+        }
 
-    function bindAxisControls() {
-      elements.yScaleSlider.addEventListener('input', () => {
-        const yScale = Number(elements.yScaleSlider.value);
-        elements.yScaleValue.textContent = `${Math.round(yScale * 100)}%`;
-        window.clearTimeout(axisTimer);
-        axisTimer = window.setTimeout(() => {
-          commitAxisPatch({ yScale }, 'Масштаб Y обновлён');
-        }, 110);
+        state = nextState;
+        executePipeline('Ручной диапазон применён');
       });
 
-      elements.yScaleSlider.addEventListener('change', () => {
-        commitAxisPatch({ yScale: Number(elements.yScaleSlider.value) }, 'Масштаб Y обновлён');
-      });
+      elements.fitYButton.addEventListener('click', () => {
+        if (!lastDatasets) {
+          return;
+        }
 
-      elements.yMaxInput.addEventListener('change', () => {
-        commitAxisPatch({ yMaxAbs: Number(elements.yMaxInput.value) }, 'Ограничение Y обновлено');
-      });
+        const [yMin, yMax] = recommendYRange(state, lastDatasets);
+        const nextState = updateViewport(state, { yMin, yMax });
 
-      elements.aspectLockToggle.addEventListener('change', () => {
-        commitAxisPatch({ lockAspect: elements.aspectLockToggle.checked }, 'Соотношение X/Y обновлено');
-      });
+        if (nextState === state) {
+          return;
+        }
 
-      elements.yPerXInput.addEventListener('change', () => {
-        commitAxisPatch({ yPerX: Number(elements.yPerXInput.value) }, 'Коэффициент Y/X обновлён');
+        state = nextState;
+        executePipeline('Диапазон Y подобран автоматически');
       });
     }
 
@@ -108,8 +110,9 @@ window.MathVisualizer = window.MathVisualizer || {};
     }
 
     renderActiveMode(elements, state.mode, state);
+    syncViewportControls(elements, state.viewport);
     setChartStatus(elements, 'Загружаю график…', true);
-    bindAxisControls();
+    bindViewportControls();
 
     elements.modeButtons.forEach((button) => {
       button.addEventListener('click', () => {
