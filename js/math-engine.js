@@ -18,6 +18,18 @@ window.MathVisualizer = window.MathVisualizer || {};
     return null;
   }
 
+  function clampNumber(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function resolveSampleCount(state) {
+    const xSpan = state.viewport.xMax - state.viewport.xMin;
+    const shrinkFactor = clampNumber(1.25 - Math.log10(xSpan + 1) * 0.42, 0.34, 1.4);
+    const target = Math.round(state.sampleCount * shrinkFactor);
+
+    return clampNumber(target, 151, 801);
+  }
+
   function buildXValues(xMin, xMax, sampleCount) {
     const step = (xMax - xMin) / (sampleCount - 1);
     return Array.from({ length: sampleCount }, (_, index) => xMin + step * index);
@@ -254,7 +266,8 @@ window.MathVisualizer = window.MathVisualizer || {};
 
   function runMathPipeline(state) {
     const { xMin, xMax } = state.viewport;
-    const xValues = buildXValues(xMin, xMax, state.sampleCount);
+    const sampleCount = resolveSampleCount(state);
+    const xValues = buildXValues(xMin, xMax, sampleCount);
     const compiledFunction = compileExpression(state.expression);
     const functionValues = evaluateSeries(compiledFunction, xValues);
     const derivativeExpression = deriveExpression(state.expression);
@@ -265,6 +278,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
     return {
       xValues,
+      sampleCount,
       zeroIndex: getZeroSplitIndex(xValues),
       series: {
         function: functionValues,

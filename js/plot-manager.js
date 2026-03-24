@@ -6,7 +6,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
   function createLineTrace({ color, hoverLabel, name, showLegend, x, y }) {
     return {
-      type: 'scatter',
+      type: 'scattergl',
       mode: 'lines',
       x,
       y,
@@ -14,9 +14,9 @@ window.MathVisualizer = window.MathVisualizer || {};
       showlegend: showLegend,
       line: {
         color,
-        width: 3.4,
-        shape: 'spline',
-        smoothing: 0.55
+        width: 2.4,
+        shape: 'linear',
+        simplify: true
       },
       hovertemplate: `${hoverLabel}<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>`
     };

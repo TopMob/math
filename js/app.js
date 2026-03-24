@@ -15,13 +15,17 @@ window.MathVisualizer = window.MathVisualizer || {};
     let state = createInitialState();
     let viewportBound = false;
     let viewportTimer = null;
+    let axisTimer = null;
 
     function executePipeline(statusText = 'График обновлён') {
       try {
         const validState = validateState(state);
         setChartStatus(elements, 'Обновляю сцену…', true);
         const datasets = runMathPipeline(validState);
-        renderActiveMode(elements, validState.mode, validState);
+        renderActiveMode(elements, validState.mode, {
+          ...validState,
+          sampleCount: datasets.sampleCount
+        });
         renderMetrics(elements, validState, datasets);
         renderPlot(elements.graph, validState, datasets)
           .then(() => {
@@ -52,57 +56,40 @@ window.MathVisualizer = window.MathVisualizer || {};
       }
     }
 
+    function commitAxisPatch(patch, statusText) {
+      const nextState = updateAxisSettings(state, patch);
+      if (nextState === state) {
+        return;
+      }
+
+      state = nextState;
+      executePipeline(statusText);
+    }
+
     function bindAxisControls() {
       elements.yScaleSlider.addEventListener('input', () => {
-        const nextState = updateAxisSettings(state, {
-          yScale: Number(elements.yScaleSlider.value)
-        });
+        const yScale = Number(elements.yScaleSlider.value);
+        elements.yScaleValue.textContent = `${Math.round(yScale * 100)}%`;
+        window.clearTimeout(axisTimer);
+        axisTimer = window.setTimeout(() => {
+          commitAxisPatch({ yScale }, 'Масштаб Y обновлён');
+        }, 110);
+      });
 
-        if (nextState === state) {
-          return;
-        }
-
-        state = nextState;
-        executePipeline('Масштаб Y обновлён');
+      elements.yScaleSlider.addEventListener('change', () => {
+        commitAxisPatch({ yScale: Number(elements.yScaleSlider.value) }, 'Масштаб Y обновлён');
       });
 
       elements.yMaxInput.addEventListener('change', () => {
-        const nextState = updateAxisSettings(state, {
-          yMaxAbs: Number(elements.yMaxInput.value)
-        });
-
-        if (nextState === state) {
-          return;
-        }
-
-        state = nextState;
-        executePipeline('Ограничение Y обновлено');
+        commitAxisPatch({ yMaxAbs: Number(elements.yMaxInput.value) }, 'Ограничение Y обновлено');
       });
 
       elements.aspectLockToggle.addEventListener('change', () => {
-        const nextState = updateAxisSettings(state, {
-          lockAspect: elements.aspectLockToggle.checked
-        });
-
-        if (nextState === state) {
-          return;
-        }
-
-        state = nextState;
-        executePipeline('Соотношение X/Y обновлено');
+        commitAxisPatch({ lockAspect: elements.aspectLockToggle.checked }, 'Соотношение X/Y обновлено');
       });
 
       elements.yPerXInput.addEventListener('change', () => {
-        const nextState = updateAxisSettings(state, {
-          yPerX: Number(elements.yPerXInput.value)
-        });
-
-        if (nextState === state) {
-          return;
-        }
-
-        state = nextState;
-        executePipeline('Коэффициент Y/X обновлён');
+        commitAxisPatch({ yPerX: Number(elements.yPerXInput.value) }, 'Коэффициент Y/X обновлён');
       });
     }
 
