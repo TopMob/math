@@ -26,36 +26,46 @@
     <div class="page-shell">
       <div class="background-orb background-orb-left"></div>
       <div class="background-orb background-orb-right"></div>
+      <div class="background-grid"></div>
 
-      <header class="hero card">
+      <header class="hero card reveal reveal-delay-1">
         <div class="hero-copy">
           <span class="hero-kicker">Математическая сцена</span>
           <h1 aria-label="x в кубе минус 2 икс в квадрате плюс икс плюс 1">x<sup>3</sup> − 2x<sup>2</sup> + x + 1</h1>
           <p class="hero-description">
-            Чистая координатная плоскость, нормальный шаг сетки, акцент на оси X/Y и быстрый
-            режим просмотра как по отдельности, так и сразу всех трёх кривых в одной сцене.
+            Плавная световая сцена, быстрые переключения режимов и более информативные подсказки
+            по текущему состоянию графика без лишнего визуального шума.
           </p>
+          <div class="hero-highlights" aria-label="Ключевые особенности интерфейса">
+            <span class="highlight-pill">Плавные анимации</span>
+            <span class="highlight-pill">Живые метрики</span>
+            <span class="highlight-pill">Чистая координатная плоскость</span>
+          </div>
         </div>
 
         <div class="hero-side">
           <div class="formula-pill">f(x) = x³ − 2x² + x + 1</div>
           <div class="info-grid">
-            <article class="info-card">
+            <article class="info-card reveal reveal-delay-2">
               <span class="info-label">Режим</span>
               <strong id="modeTitle">Функция</strong>
               <p id="modeDescription">Исходная кривая с выделенными осями и считываемой сеткой.</p>
             </article>
-            <article class="info-card info-card-accent">
-              <span class="info-label">Сцена</span>
-              <strong>Голубой · зелёный · чёрный</strong>
-              <p>Палитра усилена в сторону бирюзы и зелени, а анимация стала легче и быстрее.</p>
+            <article class="info-card info-card-accent reveal reveal-delay-3">
+              <span class="info-label">Обзор</span>
+              <strong id="sceneRange">Окно: −4.5 … 4.5</strong>
+              <p id="sceneHint">Панорамируйте или масштабируйте сцену, чтобы пересчитать метрики под новое окно.</p>
+              <div class="scene-meta" aria-label="Технические параметры сцены">
+                <span class="scene-chip" id="sceneDensity">501 точка</span>
+                <span class="scene-chip" id="sceneFocus">Акцент на функции</span>
+              </div>
             </article>
           </div>
         </div>
       </header>
 
       <main class="layout">
-        <section class="control-panel card">
+        <section class="control-panel card reveal reveal-delay-4">
           <div class="toolbar" role="group" aria-label="Переключение графика">
             <button type="button" class="mode-button is-active" data-mode="function">Функция</button>
             <button type="button" class="mode-button" data-mode="derivative">Производная</button>
@@ -79,8 +89,13 @@
           </div>
         </section>
 
-        <section class="card chart-card">
-          <div id="graph" class="graph" aria-label="График функции"></div>
+        <section class="card chart-card reveal reveal-delay-5">
+          <div class="chart-shell">
+            <div class="chart-glow chart-glow-left"></div>
+            <div class="chart-glow chart-glow-right"></div>
+            <div class="chart-status" id="chartStatus">График обновлён</div>
+            <div id="graph" class="graph" aria-label="График функции"></div>
+          </div>
         </section>
       </main>
     </div>

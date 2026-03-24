@@ -15,11 +15,31 @@ window.MathVisualizer = window.MathVisualizer || {};
       metricTertiaryLabel: document.getElementById('metricTertiaryLabel'),
       metricPrimary: document.getElementById('metricPrimary'),
       metricSlope: document.getElementById('metricSlope'),
-      metricExtrema: document.getElementById('metricExtrema')
+      metricExtrema: document.getElementById('metricExtrema'),
+      sceneRange: document.getElementById('sceneRange'),
+      sceneDensity: document.getElementById('sceneDensity'),
+      sceneFocus: document.getElementById('sceneFocus'),
+      sceneHint: document.getElementById('sceneHint'),
+      chartStatus: document.getElementById('chartStatus')
     };
   }
 
-  function renderActiveMode(elements, mode) {
+  function formatPointCount(sampleCount) {
+    const remainder10 = sampleCount % 10;
+    const remainder100 = sampleCount % 100;
+
+    if (remainder10 === 1 && remainder100 !== 11) {
+      return `${sampleCount} точка`;
+    }
+
+    if (remainder10 >= 2 && remainder10 <= 4 && !(remainder100 >= 12 && remainder100 <= 14)) {
+      return `${sampleCount} точки`;
+    }
+
+    return `${sampleCount} точек`;
+  }
+
+  function renderActiveMode(elements, mode, state) {
     const modeDetails = MODE_DETAILS[mode];
 
     elements.modeButtons.forEach((button) => {
@@ -28,34 +48,97 @@ window.MathVisualizer = window.MathVisualizer || {};
 
     elements.modeTitle.textContent = modeDetails.title;
     elements.modeDescription.textContent = modeDetails.description;
+    elements.sceneRange.textContent = `Окно: ${formatNumber(state.viewport.xMin)} … ${formatNumber(state.viewport.xMax)}`;
+    elements.sceneDensity.textContent = formatPointCount(state.sampleCount);
+    elements.sceneFocus.textContent = modeDetails.focus;
+    elements.sceneHint.textContent = modeDetails.status;
+  }
+
+  function renderModeMetrics(elements, config) {
+    elements.metricPrimaryLabel.textContent = config.primaryLabel;
+    elements.metricSecondaryLabel.textContent = config.secondaryLabel;
+    elements.metricTertiaryLabel.textContent = config.tertiaryLabel;
+    elements.metricPrimary.textContent = config.primaryValue;
+    elements.metricSlope.textContent = config.secondaryValue;
+    elements.metricExtrema.textContent = config.tertiaryValue;
+  }
+
+  function buildMetricsForFunction(datasets) {
+    return {
+      primaryLabel: 'f(0)',
+      secondaryLabel: 'Корни в окне',
+      tertiaryLabel: 'Экстремумы в окне',
+      primaryValue: formatNumber(datasets.stats.function.atZero),
+      secondaryValue: String(datasets.roots.function.length),
+      tertiaryValue: String(datasets.extrema.length)
+    };
+  }
+
+  function buildMetricsForDerivative(datasets) {
+    return {
+      primaryLabel: 'f′(0)',
+      secondaryLabel: 'Нули f′ в окне',
+      tertiaryLabel: 'Диапазон f′',
+      primaryValue: formatNumber(datasets.stats.derivative.atZero),
+      secondaryValue: String(datasets.roots.derivative.length),
+      tertiaryValue: `${formatNumber(datasets.stats.derivative.min)} … ${formatNumber(datasets.stats.derivative.max)}`
+    };
+  }
+
+  function buildMetricsForIntegral(datasets) {
+    return {
+      primaryLabel: 'F(0)',
+      secondaryLabel: 'F′(0) = f(0)',
+      tertiaryLabel: 'Нули F в окне',
+      primaryValue: formatNumber(datasets.stats.integral.atZero),
+      secondaryValue: formatNumber(datasets.stats.function.atZero),
+      tertiaryValue: String(datasets.roots.integral.length)
+    };
+  }
+
+  function buildMetricsForCombo(state, datasets) {
+    return {
+      primaryLabel: 'f(0) · f′(0) · F(0)',
+      secondaryLabel: 'Диапазон X',
+      tertiaryLabel: 'Экстремумы функции',
+      primaryValue: [
+        `f=${formatNumber(datasets.stats.function.atZero)}`,
+        `f′=${formatNumber(datasets.stats.derivative.atZero)}`,
+        `F=${formatNumber(datasets.stats.integral.atZero)}`
+      ].join(' · '),
+      secondaryValue: `${formatNumber(state.viewport.xMin)} … ${formatNumber(state.viewport.xMax)}`,
+      tertiaryValue: String(datasets.extrema.length)
+    };
   }
 
   function renderMetrics(elements, state, datasets) {
     if (state.mode === 'combo') {
-      elements.metricPrimaryLabel.textContent = 'f(0) · f′(0) · F(0)';
-      elements.metricSecondaryLabel.textContent = 'Диапазон X';
-      elements.metricTertiaryLabel.textContent = 'Экстремумы функции';
-      elements.metricPrimary.textContent = [
-        `f=${formatNumber(datasets.stats.function.atZero)}`,
-        `f′=${formatNumber(datasets.stats.derivative.atZero)}`,
-        `F=${formatNumber(datasets.stats.integral.atZero)}`
-      ].join(' · ');
-      elements.metricSlope.textContent = `${formatNumber(state.viewport.xMin)} … ${formatNumber(state.viewport.xMax)}`;
-      elements.metricExtrema.textContent = String(datasets.extrema.length);
+      renderModeMetrics(elements, buildMetricsForCombo(state, datasets));
       return;
     }
 
-    elements.metricPrimaryLabel.textContent = 'Значение при x = 0';
-    elements.metricSecondaryLabel.textContent = 'Наклон в нуле';
-    elements.metricTertiaryLabel.textContent = 'Экстремумы в окне';
-    elements.metricPrimary.textContent = formatNumber(datasets.stats[state.mode].atZero);
-    elements.metricSlope.textContent = formatNumber(datasets.stats.derivative.atZero);
-    elements.metricExtrema.textContent = String(datasets.extrema.length);
+    if (state.mode === 'function') {
+      renderModeMetrics(elements, buildMetricsForFunction(datasets));
+      return;
+    }
+
+    if (state.mode === 'derivative') {
+      renderModeMetrics(elements, buildMetricsForDerivative(datasets));
+      return;
+    }
+
+    renderModeMetrics(elements, buildMetricsForIntegral(datasets));
+  }
+
+  function setChartStatus(elements, text, isBusy = false) {
+    elements.chartStatus.textContent = text;
+    elements.chartStatus.classList.toggle('is-busy', isBusy);
   }
 
   window.MathVisualizer.ui = {
     getElements,
     renderActiveMode,
-    renderMetrics
+    renderMetrics,
+    setChartStatus
   };
 })();

@@ -1,7 +1,7 @@
 window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
-  const { isFiniteNumber } = window.MathVisualizer.utils;
+  const { isFiniteNumber, interpolateRoot } = window.MathVisualizer.utils;
 
   function buildXValues(xMin, xMax, sampleCount) {
     const step = (xMax - xMin) / (sampleCount - 1);
@@ -35,6 +35,21 @@ window.MathVisualizer = window.MathVisualizer || {};
 
   function evaluateSeries(compiledExpression, xValues) {
     return xValues.map((x) => evaluateCompiled(compiledExpression, x));
+  }
+
+  function getZeroSplitIndex(xValues) {
+    let bestIndex = 0;
+    let bestDistance = Number.POSITIVE_INFINITY;
+
+    xValues.forEach((value, index) => {
+      const distance = Math.abs(value);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = index;
+      }
+    });
+
+    return bestIndex;
   }
 
   function computeIntegralSeries(xValues, functionValues) {
@@ -167,21 +182,6 @@ window.MathVisualizer = window.MathVisualizer || {};
     return extrema;
   }
 
-  function getZeroSplitIndex(xValues) {
-    let bestIndex = 0;
-    let bestDistance = Number.POSITIVE_INFINITY;
-
-    xValues.forEach((value, index) => {
-      const distance = Math.abs(value);
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        bestIndex = index;
-      }
-    });
-
-    return bestIndex;
-  }
-
   function computeSeriesStats(xValues, values) {
     const visibleValues = values.filter(isFiniteNumber);
     if (visibleValues.length === 0) {
@@ -199,6 +199,44 @@ window.MathVisualizer = window.MathVisualizer || {};
       max: Math.max(...visibleValues),
       atZero: isFiniteNumber(values[zeroIndex]) ? values[zeroIndex] : null
     };
+  }
+
+  function findZeroCrossings(xValues, values) {
+    const roots = [];
+
+    for (let index = 1; index < values.length; index += 1) {
+      const previousValue = values[index - 1];
+      const currentValue = values[index];
+      const previousX = xValues[index - 1];
+      const currentX = xValues[index];
+
+      if (!isFiniteNumber(previousValue) || !isFiniteNumber(currentValue)) {
+        continue;
+      }
+
+      let root = null;
+
+      if (previousValue === 0) {
+        root = previousX;
+      } else if (currentValue === 0) {
+        root = currentX;
+      } else if (previousValue * currentValue < 0) {
+        root = interpolateRoot(previousX, previousValue, currentX, currentValue);
+      }
+
+      if (!isFiniteNumber(root)) {
+        continue;
+      }
+
+      const lastRoot = roots[roots.length - 1];
+      if (isFiniteNumber(lastRoot) && Math.abs(lastRoot - root) < 1e-4) {
+        continue;
+      }
+
+      roots.push(root);
+    }
+
+    return roots;
   }
 
   function runMathPipeline(state) {
@@ -224,6 +262,11 @@ window.MathVisualizer = window.MathVisualizer || {};
         function: computeSeriesStats(xValues, functionValues),
         derivative: computeSeriesStats(xValues, derivativeValues),
         integral: computeSeriesStats(xValues, integralValues)
+      },
+      roots: {
+        function: findZeroCrossings(xValues, functionValues),
+        derivative: findZeroCrossings(xValues, derivativeValues),
+        integral: findZeroCrossings(xValues, integralValues)
       },
       extrema
     };

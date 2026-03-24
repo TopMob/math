@@ -14,7 +14,9 @@ window.MathVisualizer = window.MathVisualizer || {};
       showlegend: showLegend,
       line: {
         color,
-        width: 3.4
+        width: 3.4,
+        shape: 'spline',
+        smoothing: 0.55
       },
       hovertemplate: `${hoverLabel}<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>`
     };
@@ -31,6 +33,7 @@ window.MathVisualizer = window.MathVisualizer || {};
       marker: {
         size,
         color,
+        opacity: 0.95,
         line: {
           width: 1.5,
           color: '#081224'
@@ -168,6 +171,10 @@ window.MathVisualizer = window.MathVisualizer || {};
         b: 58,
         l: 72
       },
+      transition: {
+        duration: 340,
+        easing: 'cubic-in-out'
+      },
       showlegend: isCombo,
       legend: {
         x: 1,
@@ -179,6 +186,13 @@ window.MathVisualizer = window.MathVisualizer || {};
         font: {
           color: PLOT_COLORS.comboText,
           size: 12
+        }
+      },
+      hoverlabel: {
+        bgcolor: 'rgba(8, 18, 36, 0.9)',
+        bordercolor: 'rgba(125, 211, 252, 0.34)',
+        font: {
+          color: '#eff6ff'
         }
       },
       dragmode: 'pan',
@@ -240,6 +254,21 @@ window.MathVisualizer = window.MathVisualizer || {};
     };
   }
 
+  function createExtremaTrace(datasets) {
+    if (datasets.extrema.length === 0) {
+      return null;
+    }
+
+    return createMarkerTrace({
+      x: datasets.extrema.map((point) => point.x),
+      y: datasets.extrema.map((point) => point.y),
+      color: PLOT_COLORS.extrema,
+      name: 'Экстремумы',
+      hovertemplate: 'Экстремум<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>',
+      size: 10
+    });
+  }
+
   function buildPlotModel(state, datasets) {
     const baseSeries = getBaseSeries(state.mode, datasets);
     const lineTraces = baseSeries.map((series) => {
@@ -266,15 +295,9 @@ window.MathVisualizer = window.MathVisualizer || {};
       })
     ];
 
-    if (state.mode === 'function' && datasets.extrema.length > 0) {
-      extras.push(createMarkerTrace({
-        x: datasets.extrema.map((point) => point.x),
-        y: datasets.extrema.map((point) => point.y),
-        color: PLOT_COLORS.extrema,
-        name: 'Экстремумы',
-        hovertemplate: 'Экстремум<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>',
-        size: 10
-      }));
+    const extremaTrace = createExtremaTrace(datasets);
+    if (extremaTrace && (state.mode === 'function' || state.mode === 'combo')) {
+      extras.push(extremaTrace);
     }
 
     return [...lineTraces, ...extras];
