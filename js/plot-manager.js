@@ -135,6 +135,58 @@ window.MathVisualizer = window.MathVisualizer || {};
     return [Math.min(lower - padding, -2), Math.max(upper + padding, 2)];
   }
 
+  function normalizeRange(range) {
+    const min = Math.min(range[0], range[1]);
+    const max = Math.max(range[0], range[1]);
+    if (!Number.isFinite(min) || !Number.isFinite(max) || max - min < 1e-9) {
+      return [-6, 6];
+    }
+
+    return [min, max];
+  }
+
+  function applyScale(range, yScale) {
+    const safeRange = normalizeRange(range);
+    const center = (safeRange[0] + safeRange[1]) / 2;
+    const span = Math.max((safeRange[1] - safeRange[0]) * yScale, 0.5);
+
+    return [center - span / 2, center + span / 2];
+  }
+
+  function applyAspectRatio(range, xSpan, yPerX) {
+    const safeRange = normalizeRange(range);
+    const center = (safeRange[0] + safeRange[1]) / 2;
+    const span = Math.max(xSpan * yPerX, 0.5);
+
+    return [center - span / 2, center + span / 2];
+  }
+
+  function applyClamp(range, yMaxAbs) {
+    const safeRange = normalizeRange(range);
+    const maxAbs = Math.max(yMaxAbs, 1);
+    let nextMin = Math.max(safeRange[0], -maxAbs);
+    let nextMax = Math.min(safeRange[1], maxAbs);
+
+    if (nextMax - nextMin < 0.5) {
+      const center = (nextMax + nextMin) / 2;
+      nextMin = Math.max(center - 0.25, -maxAbs);
+      nextMax = Math.min(center + 0.25, maxAbs);
+    }
+
+    return [nextMin, nextMax];
+  }
+
+  function resolveYRange(state, datasets) {
+    const autoRange = computeSmartYRange(state.mode, datasets);
+    const xSpan = state.viewport.xMax - state.viewport.xMin;
+    const scaledRange = applyScale(autoRange, state.axisSettings.yScale);
+    const ratioAdjustedRange = state.axisSettings.lockAspect
+      ? applyAspectRatio(scaledRange, xSpan, state.axisSettings.yPerX)
+      : scaledRange;
+
+    return applyClamp(ratioAdjustedRange, state.axisSettings.yMaxAbs);
+  }
+
   function getNiceStep(span, targetLines) {
     const rawStep = Math.max(span / targetLines, 1);
     const power = 10 ** Math.floor(Math.log10(rawStep));
@@ -156,7 +208,7 @@ window.MathVisualizer = window.MathVisualizer || {};
   }
 
   function buildLayout(state, datasets) {
-    const yRange = computeSmartYRange(state.mode, datasets);
+    const yRange = resolveYRange(state, datasets);
     const isCombo = state.mode === 'combo';
     const xSpan = state.viewport.xMax - state.viewport.xMin;
 
@@ -199,7 +251,7 @@ window.MathVisualizer = window.MathVisualizer || {};
       },
       dragmode: 'pan',
       hovermode: 'closest',
-      uirevision: `${state.mode}-viewport`,
+      uirevision: `${state.mode}-${state.axisSettings.yScale}-${state.axisSettings.yMaxAbs}-${state.axisSettings.lockAspect}-${state.axisSettings.yPerX}`,
       xaxis: {
         title: 'X',
         range: [state.viewport.xMin, state.viewport.xMax],

@@ -9,7 +9,13 @@ window.MathVisualizer.config = {
       xMin: -4.5,
       xMax: 4.5
     },
-    sampleCount: 501
+    sampleCount: 501,
+    axisSettings: {
+      yScale: 0.24,
+      yMaxAbs: 220,
+      lockAspect: false,
+      yPerX: 2.5
+    }
   },
   MODE_LABELS: {
     function: 'Функция',

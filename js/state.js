@@ -7,7 +7,8 @@ window.MathVisualizer = window.MathVisualizer || {};
   function createInitialState() {
     return {
       ...APP_STATE,
-      viewport: { ...APP_STATE.viewport }
+      viewport: { ...APP_STATE.viewport },
+      axisSettings: { ...APP_STATE.axisSettings }
     };
   }
 
@@ -36,6 +37,38 @@ window.MathVisualizer = window.MathVisualizer || {};
     };
   }
 
+  function clampValue(value, min, max, fallback) {
+    if (!Number.isFinite(value)) {
+      return fallback;
+    }
+
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function updateAxisSettings(state, patch) {
+    const current = state.axisSettings;
+    const next = {
+      yScale: clampValue(patch.yScale ?? current.yScale, 0.03, 1, current.yScale),
+      yMaxAbs: clampValue(patch.yMaxAbs ?? current.yMaxAbs, 20, 2000000, current.yMaxAbs),
+      lockAspect: Boolean(patch.lockAspect ?? current.lockAspect),
+      yPerX: clampValue(patch.yPerX ?? current.yPerX, 0.05, 200, current.yPerX)
+    };
+
+    if (
+      next.yScale === current.yScale
+      && next.yMaxAbs === current.yMaxAbs
+      && next.lockAspect === current.lockAspect
+      && next.yPerX === current.yPerX
+    ) {
+      return state;
+    }
+
+    return {
+      ...state,
+      axisSettings: next
+    };
+  }
+
   function validateState(state) {
     if (!availableModes.has(state.mode)) {
       throw new Error('Не выбран режим отображения.');
@@ -49,6 +82,10 @@ window.MathVisualizer = window.MathVisualizer || {};
       throw new Error('Некорректная плотность выборки.');
     }
 
+    if (!state.axisSettings || !Number.isFinite(state.axisSettings.yScale) || !Number.isFinite(state.axisSettings.yMaxAbs) || !Number.isFinite(state.axisSettings.yPerX)) {
+      throw new Error('Некорректные настройки осей.');
+    }
+
     return state;
   }
 
@@ -56,6 +93,7 @@ window.MathVisualizer = window.MathVisualizer || {};
     createInitialState,
     updateMode,
     updateViewport,
+    updateAxisSettings,
     validateState
   };
 })();

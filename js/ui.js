@@ -34,8 +34,22 @@ window.MathVisualizer = window.MathVisualizer || {};
       sceneDensity: requireElement('sceneDensity'),
       sceneFocus: requireElement('sceneFocus'),
       sceneHint: requireElement('sceneHint'),
-      chartStatus: requireElement('chartStatus')
+      chartStatus: requireElement('chartStatus'),
+      yScaleSlider: requireElement('yScaleSlider'),
+      yScaleValue: requireElement('yScaleValue'),
+      yMaxInput: requireElement('yMaxInput'),
+      aspectLockToggle: requireElement('aspectLockToggle'),
+      yPerXInput: requireElement('yPerXInput')
     };
+  }
+
+  function syncAxisControls(elements, axisSettings) {
+    elements.yScaleSlider.value = String(axisSettings.yScale);
+    elements.yScaleValue.textContent = `${Math.round(axisSettings.yScale * 100)}%`;
+    elements.yMaxInput.value = String(Math.round(axisSettings.yMaxAbs));
+    elements.aspectLockToggle.checked = axisSettings.lockAspect;
+    elements.yPerXInput.value = String(axisSettings.yPerX);
+    elements.yPerXInput.disabled = !axisSettings.lockAspect;
   }
 
   function formatPointCount(sampleCount) {
@@ -66,6 +80,7 @@ window.MathVisualizer = window.MathVisualizer || {};
     elements.sceneDensity.textContent = formatPointCount(state.sampleCount);
     elements.sceneFocus.textContent = modeDetails.focus;
     elements.sceneHint.textContent = modeDetails.status;
+    syncAxisControls(elements, state.axisSettings);
   }
 
   function renderModeMetrics(elements, config) {
@@ -153,6 +168,7 @@ window.MathVisualizer = window.MathVisualizer || {};
     getElements,
     renderActiveMode,
     renderMetrics,
-    setChartStatus
+    setChartStatus,
+    syncAxisControls
   };
 })();

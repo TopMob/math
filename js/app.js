@@ -3,7 +3,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 (() => {
   const { runMathPipeline } = window.MathVisualizer.mathEngine;
   const { renderPlot, bindViewportEvents, purgePlot } = window.MathVisualizer.plotManager;
-  const { createInitialState, updateMode, updateViewport, validateState } = window.MathVisualizer.state;
+  const { createInitialState, updateMode, updateViewport, updateAxisSettings, validateState } = window.MathVisualizer.state;
   const { getElements, renderActiveMode, renderMetrics, setChartStatus } = window.MathVisualizer.ui;
 
   function isViewportChanged(currentViewport, nextViewport) {
@@ -52,6 +52,60 @@ window.MathVisualizer = window.MathVisualizer || {};
       }
     }
 
+    function bindAxisControls() {
+      elements.yScaleSlider.addEventListener('input', () => {
+        const nextState = updateAxisSettings(state, {
+          yScale: Number(elements.yScaleSlider.value)
+        });
+
+        if (nextState === state) {
+          return;
+        }
+
+        state = nextState;
+        executePipeline('Масштаб Y обновлён');
+      });
+
+      elements.yMaxInput.addEventListener('change', () => {
+        const nextState = updateAxisSettings(state, {
+          yMaxAbs: Number(elements.yMaxInput.value)
+        });
+
+        if (nextState === state) {
+          return;
+        }
+
+        state = nextState;
+        executePipeline('Ограничение Y обновлено');
+      });
+
+      elements.aspectLockToggle.addEventListener('change', () => {
+        const nextState = updateAxisSettings(state, {
+          lockAspect: elements.aspectLockToggle.checked
+        });
+
+        if (nextState === state) {
+          return;
+        }
+
+        state = nextState;
+        executePipeline('Соотношение X/Y обновлено');
+      });
+
+      elements.yPerXInput.addEventListener('change', () => {
+        const nextState = updateAxisSettings(state, {
+          yPerX: Number(elements.yPerXInput.value)
+        });
+
+        if (nextState === state) {
+          return;
+        }
+
+        state = nextState;
+        executePipeline('Коэффициент Y/X обновлён');
+      });
+    }
+
     function waitForLibraries(attempt = 0) {
       if (window.Plotly && window.math) {
         executePipeline();
@@ -68,6 +122,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
     renderActiveMode(elements, state.mode, state);
     setChartStatus(elements, 'Загружаю график…', true);
+    bindAxisControls();
 
     elements.modeButtons.forEach((button) => {
       button.addEventListener('click', () => {
