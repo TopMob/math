@@ -93,9 +93,11 @@ window.MathVisualizer = window.MathVisualizer || {};
       }
     }
 
+    const orderedLeft = left.reverse();
+
     return {
-      x: [...left.map((point) => point.x), null, ...right.map((point) => point.x)],
-      y: [...left.map((point) => point.y), null, ...right.map((point) => point.y)]
+      x: [...orderedLeft.map((point) => point.x), null, ...right.map((point) => point.x)],
+      y: [...orderedLeft.map((point) => point.y), null, ...right.map((point) => point.y)]
     };
   }
 

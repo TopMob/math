@@ -4,23 +4,37 @@ window.MathVisualizer = window.MathVisualizer || {};
   const { MODE_DETAILS } = window.MathVisualizer.config;
   const { formatNumber } = window.MathVisualizer.utils;
 
+  function requireElement(id) {
+    const element = document.getElementById(id);
+    if (!element) {
+      throw new Error(`Не найден элемент интерфейса: ${id}`);
+    }
+
+    return element;
+  }
+
   function getElements() {
+    const modeButtons = Array.from(document.querySelectorAll('[data-mode]'));
+    if (modeButtons.length === 0) {
+      throw new Error('Не найдены кнопки режимов отображения.');
+    }
+
     return {
-      graph: document.getElementById('graph'),
-      modeButtons: Array.from(document.querySelectorAll('[data-mode]')),
-      modeTitle: document.getElementById('modeTitle'),
-      modeDescription: document.getElementById('modeDescription'),
-      metricPrimaryLabel: document.getElementById('metricPrimaryLabel'),
-      metricSecondaryLabel: document.getElementById('metricSecondaryLabel'),
-      metricTertiaryLabel: document.getElementById('metricTertiaryLabel'),
-      metricPrimary: document.getElementById('metricPrimary'),
-      metricSlope: document.getElementById('metricSlope'),
-      metricExtrema: document.getElementById('metricExtrema'),
-      sceneRange: document.getElementById('sceneRange'),
-      sceneDensity: document.getElementById('sceneDensity'),
-      sceneFocus: document.getElementById('sceneFocus'),
-      sceneHint: document.getElementById('sceneHint'),
-      chartStatus: document.getElementById('chartStatus')
+      graph: requireElement('graph'),
+      modeButtons,
+      modeTitle: requireElement('modeTitle'),
+      modeDescription: requireElement('modeDescription'),
+      metricPrimaryLabel: requireElement('metricPrimaryLabel'),
+      metricSecondaryLabel: requireElement('metricSecondaryLabel'),
+      metricTertiaryLabel: requireElement('metricTertiaryLabel'),
+      metricPrimary: requireElement('metricPrimary'),
+      metricSlope: requireElement('metricSlope'),
+      metricExtrema: requireElement('metricExtrema'),
+      sceneRange: requireElement('sceneRange'),
+      sceneDensity: requireElement('sceneDensity'),
+      sceneFocus: requireElement('sceneFocus'),
+      sceneHint: requireElement('sceneHint'),
+      chartStatus: requireElement('chartStatus')
     };
   }
 

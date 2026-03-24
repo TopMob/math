@@ -3,6 +3,21 @@ window.MathVisualizer = window.MathVisualizer || {};
 (() => {
   const { isFiniteNumber, interpolateRoot } = window.MathVisualizer.utils;
 
+  function toFiniteNumber(rawValue) {
+    if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
+      return rawValue;
+    }
+
+    if (rawValue && typeof rawValue.valueOf === 'function') {
+      const coerced = rawValue.valueOf();
+      if (typeof coerced === 'number' && Number.isFinite(coerced)) {
+        return coerced;
+      }
+    }
+
+    return null;
+  }
+
   function buildXValues(xMin, xMax, sampleCount) {
     const step = (xMax - xMin) / (sampleCount - 1);
     return Array.from({ length: sampleCount }, (_, index) => xMin + step * index);
@@ -26,8 +41,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
   function evaluateCompiled(compiledExpression, x) {
     try {
-      const rawValue = compiledExpression.evaluate({ x });
-      return typeof rawValue === 'number' && Number.isFinite(rawValue) ? rawValue : null;
+      return toFiniteNumber(compiledExpression.evaluate({ x }));
     } catch {
       return null;
     }
@@ -94,7 +108,7 @@ window.MathVisualizer = window.MathVisualizer || {};
     let left = leftX;
     let right = rightX;
     let leftValue = evaluateCompiled(compiledDerivative, left);
-    let rightValue = evaluateCompiled(compiledDerivative, right);
+    const rightValue = evaluateCompiled(compiledDerivative, right);
 
     if (!isFiniteNumber(leftValue) || !isFiniteNumber(rightValue)) {
       return null;
@@ -126,7 +140,6 @@ window.MathVisualizer = window.MathVisualizer || {};
 
       if (leftValue * middleValue <= 0) {
         right = middle;
-        rightValue = middleValue;
       } else {
         left = middle;
         leftValue = middleValue;

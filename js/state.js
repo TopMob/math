@@ -12,6 +12,10 @@ window.MathVisualizer = window.MathVisualizer || {};
   }
 
   function updateMode(state, mode) {
+    if (!availableModes.has(mode)) {
+      return state;
+    }
+
     return {
       ...state,
       mode
@@ -19,6 +23,10 @@ window.MathVisualizer = window.MathVisualizer || {};
   }
 
   function updateViewport(state, xMin, xMax) {
+    if (!Number.isFinite(xMin) || !Number.isFinite(xMax) || xMin >= xMax) {
+      return state;
+    }
+
     return {
       ...state,
       viewport: {
@@ -35,6 +43,10 @@ window.MathVisualizer = window.MathVisualizer || {};
 
     if (!Number.isFinite(state.viewport.xMin) || !Number.isFinite(state.viewport.xMax) || state.viewport.xMin >= state.viewport.xMax) {
       throw new Error('Некорректный диапазон графика.');
+    }
+
+    if (!Number.isInteger(state.sampleCount) || state.sampleCount < 2) {
+      throw new Error('Некорректная плотность выборки.');
     }
 
     return state;

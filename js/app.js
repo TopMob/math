@@ -6,6 +6,10 @@ window.MathVisualizer = window.MathVisualizer || {};
   const { createInitialState, updateMode, updateViewport, validateState } = window.MathVisualizer.state;
   const { getElements, renderActiveMode, renderMetrics, setChartStatus } = window.MathVisualizer.ui;
 
+  function isViewportChanged(currentViewport, nextViewport) {
+    return Math.abs(currentViewport.xMin - nextViewport.xMin) > 1e-7 || Math.abs(currentViewport.xMax - nextViewport.xMax) > 1e-7;
+  }
+
   function initApp() {
     const elements = getElements();
     let state = createInitialState();
@@ -26,7 +30,12 @@ window.MathVisualizer = window.MathVisualizer || {};
               bindViewportEvents(elements.graph, (xMin, xMax) => {
                 window.clearTimeout(viewportTimer);
                 viewportTimer = window.setTimeout(() => {
-                  state = updateViewport(state, xMin, xMax);
+                  const nextState = updateViewport(state, xMin, xMax);
+                  if (!isViewportChanged(state.viewport, nextState.viewport)) {
+                    return;
+                  }
+
+                  state = nextState;
                   executePipeline('Окно анализа обновлено');
                 }, 120);
               });
@@ -62,7 +71,12 @@ window.MathVisualizer = window.MathVisualizer || {};
 
     elements.modeButtons.forEach((button) => {
       button.addEventListener('click', () => {
-        state = updateMode(state, button.dataset.mode);
+        const nextState = updateMode(state, button.dataset.mode);
+        if (nextState === state) {
+          return;
+        }
+
+        state = nextState;
         executePipeline(`Режим: ${button.textContent}`);
       });
     });
