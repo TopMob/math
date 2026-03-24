@@ -23,9 +23,7 @@
     <div class="page-shell">
       <header class="hero card reveal reveal-delay-1">
         <div class="hero-copy">
-          <h1>f(x) = x<sup>3</sup> − 2x<sup>2</sup> + x + 1</h1>
-          <p id="sceneRange">Окно: −4.5 … 4.5 | Y: −20 … 40</p>
-          <p id="sceneDensity">501 точка</p>
+          <h1 id="formulaTitle">f(x) = x<sup>3</sup> − 2x<sup>2</sup> + x + 1</h1>
         </div>
       </header>
 
@@ -36,31 +34,6 @@
             <button type="button" class="mode-button" data-mode="derivative">Производная</button>
             <button type="button" class="mode-button" data-mode="integral">Первообразная</button>
             <button type="button" class="mode-button mode-button-combo" data-mode="combo">3 в 1</button>
-          </div>
-
-          <div class="axis-editor" aria-label="Ручная настройка диапазона графика">
-            <div class="axis-editor-row axis-editor-row-grid">
-              <label class="axis-field" for="xMinInput">
-                <span class="axis-label">X min</span>
-                <input id="xMinInput" type="number" step="0.1" value="-4.5" />
-              </label>
-              <label class="axis-field" for="xMaxInput">
-                <span class="axis-label">X max</span>
-                <input id="xMaxInput" type="number" step="0.1" value="4.5" />
-              </label>
-              <label class="axis-field" for="yMinInput">
-                <span class="axis-label">Y min</span>
-                <input id="yMinInput" type="number" step="0.1" value="-20" />
-              </label>
-              <label class="axis-field" for="yMaxInput">
-                <span class="axis-label">Y max</span>
-                <input id="yMaxInput" type="number" step="0.1" value="40" />
-              </label>
-            </div>
-            <div class="axis-editor-row">
-              <button type="button" class="mode-button" id="applyViewportButton">Применить диапазон</button>
-              <button type="button" class="mode-button" id="fitYButton">Подобрать Y</button>
-            </div>
           </div>
         </section>
 

@@ -1,7 +1,7 @@
 window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
-  const { formatNumber } = window.MathVisualizer.utils;
+  const { MODE_FORMULAS } = window.MathVisualizer.config;
 
   function requireElement(id) {
     const element = document.getElementById(id);
@@ -21,47 +21,17 @@ window.MathVisualizer = window.MathVisualizer || {};
     return {
       graph: requireElement('graph'),
       modeButtons,
-      sceneRange: requireElement('sceneRange'),
-      sceneDensity: requireElement('sceneDensity'),
-      chartStatus: requireElement('chartStatus'),
-      xMinInput: requireElement('xMinInput'),
-      xMaxInput: requireElement('xMaxInput'),
-      yMinInput: requireElement('yMinInput'),
-      yMaxInput: requireElement('yMaxInput'),
-      applyViewportButton: requireElement('applyViewportButton'),
-      fitYButton: requireElement('fitYButton')
+      formulaTitle: requireElement('formulaTitle'),
+      chartStatus: requireElement('chartStatus')
     };
   }
 
-  function syncViewportControls(elements, viewport) {
-    elements.xMinInput.value = String(viewport.xMin);
-    elements.xMaxInput.value = String(viewport.xMax);
-    elements.yMinInput.value = String(viewport.yMin);
-    elements.yMaxInput.value = String(viewport.yMax);
-  }
-
-  function formatPointCount(sampleCount) {
-    const remainder10 = sampleCount % 10;
-    const remainder100 = sampleCount % 100;
-
-    if (remainder10 === 1 && remainder100 !== 11) {
-      return `${sampleCount} точка`;
-    }
-
-    if (remainder10 >= 2 && remainder10 <= 4 && !(remainder100 >= 12 && remainder100 <= 14)) {
-      return `${sampleCount} точки`;
-    }
-
-    return `${sampleCount} точек`;
-  }
-
-  function renderActiveMode(elements, mode, state) {
+  function renderActiveMode(elements, mode) {
     elements.modeButtons.forEach((button) => {
       button.classList.toggle('is-active', button.dataset.mode === mode);
     });
 
-    elements.sceneRange.textContent = `Окно: ${formatNumber(state.viewport.xMin)} … ${formatNumber(state.viewport.xMax)} | Y: ${formatNumber(state.viewport.yMin)} … ${formatNumber(state.viewport.yMax)}`;
-    elements.sceneDensity.textContent = formatPointCount(state.sampleCount);
+    elements.formulaTitle.textContent = MODE_FORMULAS[mode] || MODE_FORMULAS.function;
   }
 
   function renderMetrics() {
@@ -75,7 +45,6 @@ window.MathVisualizer = window.MathVisualizer || {};
   window.MathVisualizer.ui = {
     getElements,
     renderActiveMode,
-    syncViewportControls,
     renderMetrics,
     setChartStatus
   };

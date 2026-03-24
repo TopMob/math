@@ -2,9 +2,9 @@ window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
   const { runMathPipeline } = window.MathVisualizer.mathEngine;
-  const { renderPlot, bindViewportEvents, recommendYRange } = window.MathVisualizer.plotManager;
+  const { renderPlot, bindViewportEvents } = window.MathVisualizer.plotManager;
   const { createInitialState, updateMode, updateViewport, validateState } = window.MathVisualizer.state;
-  const { getElements, renderActiveMode, renderMetrics, setChartStatus, syncViewportControls } = window.MathVisualizer.ui;
+  const { getElements, renderActiveMode, renderMetrics, setChartStatus } = window.MathVisualizer.ui;
 
   function isViewportChanged(currentViewport, nextViewport) {
     return Math.abs(currentViewport.xMin - nextViewport.xMin) > 1e-7
@@ -18,81 +18,37 @@ window.MathVisualizer = window.MathVisualizer || {};
     let state = createInitialState();
     let viewportBound = false;
     let viewportTimer = null;
-    let lastDatasets = null;
 
     function executePipeline(statusText = 'График обновлён') {
-      try {
-        const validState = validateState(state);
-        setChartStatus(elements, 'Обновляю сцену…', true);
-        const datasets = runMathPipeline(validState);
-        lastDatasets = datasets;
-        renderActiveMode(elements, validState.mode, {
-          ...validState,
-          sampleCount: datasets.sampleCount
+      const validState = validateState(state);
+      state = validState;
+      setChartStatus(elements, 'Обновляю сцену…', true);
+      const datasets = runMathPipeline(validState);
+      renderActiveMode(elements, validState.mode);
+      renderMetrics(elements, validState, datasets);
+
+      renderPlot(elements.graph, validState, datasets)
+        .then(() => {
+          setChartStatus(elements, statusText, false);
+          if (!viewportBound) {
+            bindViewportEvents(elements.graph, (nextViewport) => {
+              window.clearTimeout(viewportTimer);
+              viewportTimer = window.setTimeout(() => {
+                const nextState = updateViewport(state, nextViewport);
+                if (!isViewportChanged(state.viewport, nextState.viewport)) {
+                  return;
+                }
+
+                state = nextState;
+                executePipeline('Окно анализа обновлено');
+              }, 120);
+            });
+            viewportBound = true;
+          }
+        })
+        .catch(() => {
+          setChartStatus(elements, 'Ошибка отрисовки', false);
         });
-        syncViewportControls(elements, validState.viewport);
-        renderMetrics(elements, validState, datasets);
-        renderPlot(elements.graph, validState, datasets)
-          .then(() => {
-            setChartStatus(elements, statusText, false);
-            if (!viewportBound) {
-              bindViewportEvents(elements.graph, (nextViewport) => {
-                window.clearTimeout(viewportTimer);
-                viewportTimer = window.setTimeout(() => {
-                  const nextState = updateViewport(state, nextViewport);
-                  if (!isViewportChanged(state.viewport, nextState.viewport)) {
-                    return;
-                  }
-
-                  state = nextState;
-                  executePipeline('Окно анализа обновлено');
-                }, 120);
-              });
-              viewportBound = true;
-            }
-          })
-          .catch(() => {
-            setChartStatus(elements, 'Проблема отрисовки, пробую повторно', false);
-          });
-      } catch {
-        setChartStatus(elements, 'Восстанавливаю график', true);
-        state = validateState(state);
-        window.setTimeout(() => executePipeline('График восстановлен'), 0);
-      }
-    }
-
-    function bindViewportControls() {
-      elements.applyViewportButton.addEventListener('click', () => {
-        const nextState = updateViewport(state, {
-          xMin: Number(elements.xMinInput.value),
-          xMax: Number(elements.xMaxInput.value),
-          yMin: Number(elements.yMinInput.value),
-          yMax: Number(elements.yMaxInput.value)
-        });
-
-        if (nextState === state) {
-          return;
-        }
-
-        state = nextState;
-        executePipeline('Ручной диапазон применён');
-      });
-
-      elements.fitYButton.addEventListener('click', () => {
-        if (!lastDatasets) {
-          return;
-        }
-
-        const [yMin, yMax] = recommendYRange(state, lastDatasets);
-        const nextState = updateViewport(state, { yMin, yMax });
-
-        if (nextState === state) {
-          return;
-        }
-
-        state = nextState;
-        executePipeline('Диапазон Y подобран автоматически');
-      });
     }
 
     function waitForLibraries(attempt = 0) {
@@ -109,10 +65,8 @@ window.MathVisualizer = window.MathVisualizer || {};
       window.setTimeout(() => waitForLibraries(attempt + 1), 250);
     }
 
-    renderActiveMode(elements, state.mode, state);
-    syncViewportControls(elements, state.viewport);
+    renderActiveMode(elements, state.mode);
     setChartStatus(elements, 'Загружаю график…', true);
-    bindViewportControls();
 
     elements.modeButtons.forEach((button) => {
       button.addEventListener('click', () => {
