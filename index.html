@@ -6,10 +6,7 @@
     <title>Графики функции, производной и первообразной</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js" defer></script>
@@ -24,63 +21,27 @@
   </head>
   <body>
     <div class="page-shell">
-      <div class="background-orb background-orb-left"></div>
-      <div class="background-orb background-orb-right"></div>
-
-      <header class="hero card">
+      <header class="hero card reveal reveal-delay-1">
         <div class="hero-copy">
-          <span class="hero-kicker">Математическая сцена</span>
-          <h1 aria-label="x в кубе минус 2 икс в квадрате плюс икс плюс 1">x<sup>3</sup> − 2x<sup>2</sup> + x + 1</h1>
-          <p class="hero-description">
-            Чистая координатная плоскость, нормальный шаг сетки, акцент на оси X/Y и быстрый
-            режим просмотра как по отдельности, так и сразу всех трёх кривых в одной сцене.
-          </p>
-        </div>
-
-        <div class="hero-side">
-          <div class="formula-pill">f(x) = x³ − 2x² + x + 1</div>
-          <div class="info-grid">
-            <article class="info-card">
-              <span class="info-label">Режим</span>
-              <strong id="modeTitle">Функция</strong>
-              <p id="modeDescription">Исходная кривая с выделенными осями и считываемой сеткой.</p>
-            </article>
-            <article class="info-card info-card-accent">
-              <span class="info-label">Сцена</span>
-              <strong>Голубой · зелёный · чёрный</strong>
-              <p>Палитра усилена в сторону бирюзы и зелени, а анимация стала легче и быстрее.</p>
-            </article>
-          </div>
+          <h1 id="formulaTitle">f(x) = x<sup>3</sup> − 2x<sup>2</sup> + x + 1</h1>
         </div>
       </header>
 
       <main class="layout">
-        <section class="control-panel card">
+        <section class="control-panel card reveal reveal-delay-4">
           <div class="toolbar" role="group" aria-label="Переключение графика">
             <button type="button" class="mode-button is-active" data-mode="function">Функция</button>
             <button type="button" class="mode-button" data-mode="derivative">Производная</button>
             <button type="button" class="mode-button" data-mode="integral">Первообразная</button>
             <button type="button" class="mode-button mode-button-combo" data-mode="combo">3 в 1</button>
           </div>
-
-          <div class="insight-strip" aria-label="Ключевые показатели графика">
-            <article class="metric-card">
-              <span class="metric-label" id="metricPrimaryLabel">Значение при x = 0</span>
-              <strong class="metric-value" id="metricPrimary">—</strong>
-            </article>
-            <article class="metric-card">
-              <span class="metric-label" id="metricSecondaryLabel">Наклон в нуле</span>
-              <strong class="metric-value" id="metricSlope">—</strong>
-            </article>
-            <article class="metric-card">
-              <span class="metric-label" id="metricTertiaryLabel">Экстремумы в окне</span>
-              <strong class="metric-value" id="metricExtrema">—</strong>
-            </article>
-          </div>
         </section>
 
-        <section class="card chart-card">
-          <div id="graph" class="graph" aria-label="График функции"></div>
+        <section class="card chart-card reveal reveal-delay-5">
+          <div class="chart-shell">
+            <div class="chart-status" id="chartStatus">Готово</div>
+            <div id="graph" class="graph" aria-label="График функции"></div>
+          </div>
         </section>
       </main>
     </div>

@@ -7,7 +7,9 @@ window.MathVisualizer.config = {
     mode: 'function',
     viewport: {
       xMin: -4.5,
-      xMax: 4.5
+      xMax: 4.5,
+      yMin: -20,
+      yMax: 40
     },
     sampleCount: 501
   },
@@ -17,23 +19,11 @@ window.MathVisualizer.config = {
     integral: 'Первообразная',
     combo: '3 в 1'
   },
-  MODE_DETAILS: {
-    function: {
-      title: 'Функция',
-      description: 'Исходная кривая в спокойном масштабе с подчёркнутой координатной плоскостью.'
-    },
-    derivative: {
-      title: 'Производная',
-      description: 'Темп изменения функции на той же аккуратной сетке без тяжёлой анимации.'
-    },
-    integral: {
-      title: 'Первообразная',
-      description: 'Накопление площади относительно нуля с быстрым и стабильным рендером.'
-    },
-    combo: {
-      title: '3 в 1',
-      description: 'Три хорошо различимых графика на одной координатной плоскости с чистой легендой.'
-    }
+  MODE_FORMULAS: {
+    function: 'f(x) = x³ − 2x² + x + 1',
+    derivative: 'f′(x) = 3x² − 4x + 1',
+    integral: 'F(x) = x⁴/4 − 2x³/3 + x²/2 + x',
+    combo: 'f(x), f′(x), F(x)'
   },
   PLOT_COLORS: {
     function: '#38bdf8',

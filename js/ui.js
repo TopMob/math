@@ -1,61 +1,51 @@
 window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
-  const { MODE_DETAILS } = window.MathVisualizer.config;
-  const { formatNumber } = window.MathVisualizer.utils;
+  const { MODE_FORMULAS } = window.MathVisualizer.config;
+
+  function requireElement(id) {
+    const element = document.getElementById(id);
+    if (!element) {
+      throw new Error(`Не найден элемент интерфейса: ${id}`);
+    }
+
+    return element;
+  }
 
   function getElements() {
+    const modeButtons = Array.from(document.querySelectorAll('[data-mode]'));
+    if (modeButtons.length === 0) {
+      throw new Error('Не найдены кнопки режимов отображения.');
+    }
+
     return {
-      graph: document.getElementById('graph'),
-      modeButtons: Array.from(document.querySelectorAll('[data-mode]')),
-      modeTitle: document.getElementById('modeTitle'),
-      modeDescription: document.getElementById('modeDescription'),
-      metricPrimaryLabel: document.getElementById('metricPrimaryLabel'),
-      metricSecondaryLabel: document.getElementById('metricSecondaryLabel'),
-      metricTertiaryLabel: document.getElementById('metricTertiaryLabel'),
-      metricPrimary: document.getElementById('metricPrimary'),
-      metricSlope: document.getElementById('metricSlope'),
-      metricExtrema: document.getElementById('metricExtrema')
+      graph: requireElement('graph'),
+      modeButtons,
+      formulaTitle: requireElement('formulaTitle'),
+      chartStatus: requireElement('chartStatus')
     };
   }
 
   function renderActiveMode(elements, mode) {
-    const modeDetails = MODE_DETAILS[mode];
-
     elements.modeButtons.forEach((button) => {
       button.classList.toggle('is-active', button.dataset.mode === mode);
     });
 
-    elements.modeTitle.textContent = modeDetails.title;
-    elements.modeDescription.textContent = modeDetails.description;
+    elements.formulaTitle.textContent = MODE_FORMULAS[mode] || MODE_FORMULAS.function;
   }
 
-  function renderMetrics(elements, state, datasets) {
-    if (state.mode === 'combo') {
-      elements.metricPrimaryLabel.textContent = 'f(0) · f′(0) · F(0)';
-      elements.metricSecondaryLabel.textContent = 'Диапазон X';
-      elements.metricTertiaryLabel.textContent = 'Экстремумы функции';
-      elements.metricPrimary.textContent = [
-        `f=${formatNumber(datasets.stats.function.atZero)}`,
-        `f′=${formatNumber(datasets.stats.derivative.atZero)}`,
-        `F=${formatNumber(datasets.stats.integral.atZero)}`
-      ].join(' · ');
-      elements.metricSlope.textContent = `${formatNumber(state.viewport.xMin)} … ${formatNumber(state.viewport.xMax)}`;
-      elements.metricExtrema.textContent = String(datasets.extrema.length);
-      return;
-    }
+  function renderMetrics() {
+  }
 
-    elements.metricPrimaryLabel.textContent = 'Значение при x = 0';
-    elements.metricSecondaryLabel.textContent = 'Наклон в нуле';
-    elements.metricTertiaryLabel.textContent = 'Экстремумы в окне';
-    elements.metricPrimary.textContent = formatNumber(datasets.stats[state.mode].atZero);
-    elements.metricSlope.textContent = formatNumber(datasets.stats.derivative.atZero);
-    elements.metricExtrema.textContent = String(datasets.extrema.length);
+  function setChartStatus(elements, text, isBusy = false) {
+    elements.chartStatus.textContent = text;
+    elements.chartStatus.classList.toggle('is-busy', isBusy);
   }
 
   window.MathVisualizer.ui = {
     getElements,
     renderActiveMode,
-    renderMetrics
+    renderMetrics,
+    setChartStatus
   };
 })();

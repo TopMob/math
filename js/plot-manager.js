@@ -14,7 +14,8 @@ window.MathVisualizer = window.MathVisualizer || {};
       showlegend: showLegend,
       line: {
         color,
-        width: 3.4
+        width: 2.4,
+        shape: 'linear'
       },
       hovertemplate: `${hoverLabel}<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>`
     };
@@ -31,6 +32,7 @@ window.MathVisualizer = window.MathVisualizer || {};
       marker: {
         size,
         color,
+        opacity: 0.95,
         line: {
           width: 1.5,
           color: '#081224'
@@ -43,35 +45,18 @@ window.MathVisualizer = window.MathVisualizer || {};
   function getBaseSeries(mode, datasets) {
     if (mode === 'combo') {
       return [
-        {
-          name: 'Функция',
-          hoverLabel: 'f(x)',
-          color: PLOT_COLORS.function,
-          values: datasets.series.function
-        },
-        {
-          name: 'Производная',
-          hoverLabel: 'f′(x)',
-          color: PLOT_COLORS.derivative,
-          values: datasets.series.derivative
-        },
-        {
-          name: 'Первообразная',
-          hoverLabel: 'F(x)',
-          color: PLOT_COLORS.integral,
-          values: datasets.series.integral
-        }
+        { name: 'Функция', hoverLabel: 'f(x)', color: PLOT_COLORS.function, values: datasets.series.function },
+        { name: 'Производная', hoverLabel: 'f′(x)', color: PLOT_COLORS.derivative, values: datasets.series.derivative },
+        { name: 'Первообразная', hoverLabel: 'F(x)', color: PLOT_COLORS.integral, values: datasets.series.integral }
       ];
     }
 
-    return [
-      {
-        name: MODE_LABELS[mode],
-        hoverLabel: mode === 'function' ? 'f(x)' : mode === 'derivative' ? 'f′(x)' : 'F(x)',
-        color: PLOT_COLORS[mode],
-        values: datasets.series[mode]
-      }
-    ];
+    return [{
+      name: MODE_LABELS[mode],
+      hoverLabel: mode === 'function' ? 'f(x)' : mode === 'derivative' ? 'f′(x)' : 'F(x)',
+      color: PLOT_COLORS[mode],
+      values: datasets.series[mode]
+    }];
   }
 
   function splitSeriesAroundZero(xValues, yValues, zeroIndex) {
@@ -90,19 +75,17 @@ window.MathVisualizer = window.MathVisualizer || {};
       }
     }
 
+    const orderedLeft = left.reverse();
+
     return {
-      x: [...left.map((point) => point.x), null, ...right.map((point) => point.x)],
-      y: [...left.map((point) => point.y), null, ...right.map((point) => point.y)]
+      x: [...orderedLeft.map((point) => point.x), null, ...right.map((point) => point.x)],
+      y: [...orderedLeft.map((point) => point.y), null, ...right.map((point) => point.y)]
     };
   }
 
   function gatherRangeValues(mode, datasets) {
     if (mode === 'combo') {
-      return [
-        ...datasets.series.function,
-        ...datasets.series.derivative,
-        ...datasets.series.integral
-      ].filter(isFiniteNumber);
+      return [...datasets.series.function, ...datasets.series.derivative, ...datasets.series.integral].filter(isFiniteNumber);
     }
 
     return datasets.series[mode].filter(isFiniteNumber);
@@ -150,24 +133,17 @@ window.MathVisualizer = window.MathVisualizer || {};
     return 10 * power;
   }
 
-  function buildLayout(state, datasets) {
-    const yRange = computeSmartYRange(state.mode, datasets);
-    const isCombo = state.mode === 'combo';
+  function buildLayout(state) {
     const xSpan = state.viewport.xMax - state.viewport.xMin;
+    const ySpan = state.viewport.yMax - state.viewport.yMin;
+    const isCombo = state.mode === 'combo';
 
     return {
       paper_bgcolor: 'rgba(0,0,0,0)',
       plot_bgcolor: 'rgba(5, 26, 18, 0.18)',
-      font: {
-        color: '#dbeafe',
-        family: 'Inter, sans-serif'
-      },
-      margin: {
-        t: 24,
-        r: 20,
-        b: 58,
-        l: 72
-      },
+      font: { color: '#dbeafe', family: 'Inter, sans-serif' },
+      margin: { t: 24, r: 20, b: 58, l: 72 },
+      transition: { duration: 260, easing: 'cubic-in-out' },
       showlegend: isCombo,
       legend: {
         x: 1,
@@ -176,14 +152,16 @@ window.MathVisualizer = window.MathVisualizer || {};
         bgcolor: PLOT_COLORS.legendBg,
         bordercolor: 'rgba(96, 165, 250, 0.22)',
         borderwidth: 1,
-        font: {
-          color: PLOT_COLORS.comboText,
-          size: 12
-        }
+        font: { color: PLOT_COLORS.comboText, size: 12 }
+      },
+      hoverlabel: {
+        bgcolor: 'rgba(8, 18, 36, 0.9)',
+        bordercolor: 'rgba(125, 211, 252, 0.34)',
+        font: { color: '#eff6ff' }
       },
       dragmode: 'pan',
       hovermode: 'closest',
-      uirevision: `${state.mode}-viewport`,
+      uirevision: `${state.mode}-manual-range`,
       xaxis: {
         title: 'X',
         range: [state.viewport.xMin, state.viewport.xMax],
@@ -200,10 +178,10 @@ window.MathVisualizer = window.MathVisualizer || {};
       },
       yaxis: {
         title: 'Y',
-        range: yRange,
+        range: [state.viewport.yMin, state.viewport.yMax],
         tickmode: 'linear',
         tick0: 0,
-        dtick: getNiceStep(yRange[1] - yRange[0], 12),
+        dtick: getNiceStep(ySpan, 12),
         gridcolor: PLOT_COLORS.grid,
         zerolinecolor: PLOT_COLORS.axisStrong,
         zerolinewidth: 2,
@@ -220,31 +198,39 @@ window.MathVisualizer = window.MathVisualizer || {};
           x1: state.viewport.xMax,
           y0: 0,
           y1: 0,
-          line: {
-            color: PLOT_COLORS.axisStrong,
-            width: 2
-          }
+          line: { color: PLOT_COLORS.axisStrong, width: 2 }
         },
         {
           type: 'line',
           x0: 0,
           x1: 0,
-          y0: yRange[0],
-          y1: yRange[1],
-          line: {
-            color: PLOT_COLORS.axisStrong,
-            width: 2
-          }
+          y0: state.viewport.yMin,
+          y1: state.viewport.yMax,
+          line: { color: PLOT_COLORS.axisStrong, width: 2 }
         }
       ]
     };
+  }
+
+  function createExtremaTrace(datasets) {
+    if (datasets.extrema.length === 0) {
+      return null;
+    }
+
+    return createMarkerTrace({
+      x: datasets.extrema.map((point) => point.x),
+      y: datasets.extrema.map((point) => point.y),
+      color: PLOT_COLORS.extrema,
+      name: 'Экстремумы',
+      hovertemplate: 'Экстремум<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>',
+      size: 10
+    });
   }
 
   function buildPlotModel(state, datasets) {
     const baseSeries = getBaseSeries(state.mode, datasets);
     const lineTraces = baseSeries.map((series) => {
       const points = splitSeriesAroundZero(datasets.xValues, series.values, datasets.zeroIndex);
-
       return createLineTrace({
         color: series.color,
         hoverLabel: series.hoverLabel,
@@ -255,26 +241,18 @@ window.MathVisualizer = window.MathVisualizer || {};
       });
     });
 
-    const extras = [
-      createMarkerTrace({
-        x: [0],
-        y: [0],
-        color: PLOT_COLORS.origin,
-        name: 'Начало координат',
-        hovertemplate: 'Начало координат<br>x=0<br>y=0<extra></extra>',
-        size: 8
-      })
-    ];
+    const extras = [createMarkerTrace({
+      x: [0],
+      y: [0],
+      color: PLOT_COLORS.origin,
+      name: 'Начало координат',
+      hovertemplate: 'Начало координат<br>x=0<br>y=0<extra></extra>',
+      size: 8
+    })];
 
-    if (state.mode === 'function' && datasets.extrema.length > 0) {
-      extras.push(createMarkerTrace({
-        x: datasets.extrema.map((point) => point.x),
-        y: datasets.extrema.map((point) => point.y),
-        color: PLOT_COLORS.extrema,
-        name: 'Экстремумы',
-        hovertemplate: 'Экстремум<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>',
-        size: 10
-      }));
+    const extremaTrace = createExtremaTrace(datasets);
+    if (extremaTrace && (state.mode === 'function' || state.mode === 'combo')) {
+      extras.push(extremaTrace);
     }
 
     return [...lineTraces, ...extras];
@@ -282,7 +260,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
   function renderPlot(graphElement, state, datasets) {
     const traces = buildPlotModel(state, datasets);
-    const layout = buildLayout(state, datasets);
+    const layout = buildLayout(state);
     const config = {
       responsive: true,
       displaylogo: false,
@@ -298,11 +276,28 @@ window.MathVisualizer = window.MathVisualizer || {};
     graphElement.on('plotly_relayout', (eventData) => {
       const xMin = eventData['xaxis.range[0]'];
       const xMax = eventData['xaxis.range[1]'];
+      const yMin = eventData['yaxis.range[0]'];
+      const yMax = eventData['yaxis.range[1]'];
+      const patch = {};
 
       if (typeof xMin === 'number' && typeof xMax === 'number' && Math.abs(xMax - xMin) > 1e-6) {
-        onViewportChange(xMin, xMax);
+        patch.xMin = xMin;
+        patch.xMax = xMax;
+      }
+
+      if (typeof yMin === 'number' && typeof yMax === 'number' && Math.abs(yMax - yMin) > 1e-6) {
+        patch.yMin = yMin;
+        patch.yMax = yMax;
+      }
+
+      if (Object.keys(patch).length > 0) {
+        onViewportChange(patch);
       }
     });
+  }
+
+  function recommendYRange(state, datasets) {
+    return computeSmartYRange(state.mode, datasets);
   }
 
   function purgePlot(graphElement) {
@@ -314,6 +309,7 @@ window.MathVisualizer = window.MathVisualizer || {};
   window.MathVisualizer.plotManager = {
     renderPlot,
     bindViewportEvents,
+    recommendYRange,
     purgePlot
   };
 })();
