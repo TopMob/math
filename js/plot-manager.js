@@ -15,8 +15,10 @@ window.MathVisualizer = window.MathVisualizer || {};
       line: {
         color,
         width: 2.4,
-        shape: 'linear'
+        shape: 'spline',
+        smoothing: 1.05
       },
+      connectgaps: false,
       hovertemplate: `${hoverLabel}<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>`
     };
   }
@@ -33,6 +35,7 @@ window.MathVisualizer = window.MathVisualizer || {};
         size,
         color,
         opacity: 0.95,
+        symbol: 'circle',
         line: {
           width: 1.5,
           color: '#081224'
@@ -143,7 +146,7 @@ window.MathVisualizer = window.MathVisualizer || {};
       plot_bgcolor: 'rgba(5, 26, 18, 0.18)',
       font: { color: '#dbeafe', family: 'Inter, sans-serif' },
       margin: { t: 24, r: 20, b: 58, l: 72 },
-      transition: { duration: 260, easing: 'cubic-in-out' },
+      transition: { duration: 720, easing: 'cubic-in-out' },
       showlegend: isCombo,
       legend: {
         x: 1,
@@ -212,18 +215,30 @@ window.MathVisualizer = window.MathVisualizer || {};
     };
   }
 
-  function createExtremaTrace(datasets) {
-    if (datasets.extrema.length === 0) {
+  function getExtremaColor(mode) {
+    if (mode === 'function') {
+      return PLOT_COLORS.extremaFunction;
+    }
+
+    if (mode === 'derivative') {
+      return PLOT_COLORS.extremaDerivative;
+    }
+
+    return PLOT_COLORS.extremaIntegral;
+  }
+
+  function createExtremaTrace(extrema, mode, seriesName = 'Экстремумы') {
+    if (extrema.length === 0) {
       return null;
     }
 
     return createMarkerTrace({
-      x: datasets.extrema.map((point) => point.x),
-      y: datasets.extrema.map((point) => point.y),
-      color: PLOT_COLORS.extrema,
-      name: 'Экстремумы',
+      x: extrema.map((point) => point.x),
+      y: extrema.map((point) => point.y),
+      color: getExtremaColor(mode),
+      name: seriesName,
       hovertemplate: 'Экстремум<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>',
-      size: 10
+      size: 11
     });
   }
 
@@ -250,9 +265,24 @@ window.MathVisualizer = window.MathVisualizer || {};
       size: 8
     })];
 
-    const extremaTrace = createExtremaTrace(datasets);
-    if (extremaTrace && (state.mode === 'function' || state.mode === 'combo')) {
-      extras.push(extremaTrace);
+    if (state.mode === 'combo') {
+      const comboExtrema = [
+        { mode: 'function', name: 'Экстремумы f(x)' },
+        { mode: 'derivative', name: 'Экстремумы f′(x)' },
+        { mode: 'integral', name: 'Экстремумы F(x)' }
+      ];
+
+      comboExtrema.forEach((item) => {
+        const trace = createExtremaTrace(datasets.extremaByMode[item.mode], item.mode, item.name);
+        if (trace) {
+          extras.push(trace);
+        }
+      });
+    } else {
+      const extremaTrace = createExtremaTrace(datasets.extremaByMode[state.mode], state.mode);
+      if (extremaTrace) {
+        extras.push(extremaTrace);
+      }
     }
 
     return [...lineTraces, ...extras];
