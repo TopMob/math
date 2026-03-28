@@ -2,6 +2,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
 (() => {
   const { MODE_FORMULAS } = window.MathVisualizer.config;
+  const { formatNumber } = window.MathVisualizer.utils;
 
   function requireElement(id) {
     const element = document.getElementById(id);
@@ -22,7 +23,8 @@ window.MathVisualizer = window.MathVisualizer || {};
       graph: requireElement('graph'),
       modeButtons,
       formulaTitle: requireElement('formulaTitle'),
-      chartStatus: requireElement('chartStatus')
+      chartStatus: requireElement('chartStatus'),
+      extremaOutput: requireElement('extremaOutput')
     };
   }
 
@@ -34,7 +36,26 @@ window.MathVisualizer = window.MathVisualizer || {};
     elements.formulaTitle.textContent = MODE_FORMULAS[mode] || MODE_FORMULAS.function;
   }
 
-  function renderMetrics() {
+  function toExtremaText(points) {
+    if (!points || points.length === 0) {
+      return 'Экстремумов в текущем диапазоне не найдено.';
+    }
+
+    return points
+      .map((point, index) => `${index + 1}) (${formatNumber(point.x)}; ${formatNumber(point.y)})`)
+      .join('\n');
+  }
+
+  function renderMetrics(elements, state, datasets) {
+    if (state.mode === 'combo') {
+      const functionText = toExtremaText(datasets.extremaByMode.function);
+      const derivativeText = toExtremaText(datasets.extremaByMode.derivative);
+      const integralText = toExtremaText(datasets.extremaByMode.integral);
+      elements.extremaOutput.textContent = `f(x):\n${functionText}\n\nf′(x):\n${derivativeText}\n\nF(x):\n${integralText}`;
+      return;
+    }
+
+    elements.extremaOutput.textContent = toExtremaText(datasets.extremaByMode[state.mode]);
   }
 
   function setChartStatus(elements, text, isBusy = false) {

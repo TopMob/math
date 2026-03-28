@@ -3,6 +3,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 (() => {
   const { PLOT_COLORS, MODE_LABELS } = window.MathVisualizer.config;
   const { isFiniteNumber } = window.MathVisualizer.utils;
+  const animationState = new WeakMap();
 
   function createLineTrace({ color, hoverLabel, name, showLegend, x, y }) {
     return {
@@ -15,8 +16,10 @@ window.MathVisualizer = window.MathVisualizer || {};
       line: {
         color,
         width: 2.4,
-        shape: 'linear'
+        shape: 'spline',
+        smoothing: 1.05
       },
+      connectgaps: false,
       hovertemplate: `${hoverLabel}<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>`
     };
   }
@@ -33,6 +36,7 @@ window.MathVisualizer = window.MathVisualizer || {};
         size,
         color,
         opacity: 0.95,
+        symbol: 'circle',
         line: {
           width: 1.5,
           color: '#081224'
@@ -143,7 +147,7 @@ window.MathVisualizer = window.MathVisualizer || {};
       plot_bgcolor: 'rgba(5, 26, 18, 0.18)',
       font: { color: '#dbeafe', family: 'Inter, sans-serif' },
       margin: { t: 24, r: 20, b: 58, l: 72 },
-      transition: { duration: 260, easing: 'cubic-in-out' },
+      transition: { duration: 720, easing: 'cubic-in-out' },
       showlegend: isCombo,
       legend: {
         x: 1,
@@ -212,18 +216,30 @@ window.MathVisualizer = window.MathVisualizer || {};
     };
   }
 
-  function createExtremaTrace(datasets) {
-    if (datasets.extrema.length === 0) {
+  function getExtremaColor(mode) {
+    if (mode === 'function') {
+      return PLOT_COLORS.extremaFunction;
+    }
+
+    if (mode === 'derivative') {
+      return PLOT_COLORS.extremaDerivative;
+    }
+
+    return PLOT_COLORS.extremaIntegral;
+  }
+
+  function createExtremaTrace(extrema, mode, seriesName = 'Экстремумы') {
+    if (extrema.length === 0) {
       return null;
     }
 
     return createMarkerTrace({
-      x: datasets.extrema.map((point) => point.x),
-      y: datasets.extrema.map((point) => point.y),
-      color: PLOT_COLORS.extrema,
-      name: 'Экстремумы',
+      x: extrema.map((point) => point.x),
+      y: extrema.map((point) => point.y),
+      color: getExtremaColor(mode),
+      name: seriesName,
       hovertemplate: 'Экстремум<br>x=%{x:.2f}<br>y=%{y:.2f}<extra></extra>',
-      size: 10
+      size: 11
     });
   }
 
@@ -250,9 +266,24 @@ window.MathVisualizer = window.MathVisualizer || {};
       size: 8
     })];
 
-    const extremaTrace = createExtremaTrace(datasets);
-    if (extremaTrace && (state.mode === 'function' || state.mode === 'combo')) {
-      extras.push(extremaTrace);
+    if (state.mode === 'combo') {
+      const comboExtrema = [
+        { mode: 'function', name: 'Экстремумы f(x)' },
+        { mode: 'derivative', name: 'Экстремумы f′(x)' },
+        { mode: 'integral', name: 'Экстремумы F(x)' }
+      ];
+
+      comboExtrema.forEach((item) => {
+        const trace = createExtremaTrace(datasets.extremaByMode[item.mode], item.mode, item.name);
+        if (trace) {
+          extras.push(trace);
+        }
+      });
+    } else {
+      const extremaTrace = createExtremaTrace(datasets.extremaByMode[state.mode], state.mode);
+      if (extremaTrace) {
+        extras.push(extremaTrace);
+      }
     }
 
     return [...lineTraces, ...extras];
@@ -269,7 +300,60 @@ window.MathVisualizer = window.MathVisualizer || {};
       modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d']
     };
 
-    return window.Plotly.react(graphElement, traces, layout, config);
+    const graphState = animationState.get(graphElement);
+    if (!graphState || !canAnimate(graphState.lastTraces, traces)) {
+      animationState.set(graphElement, { ready: false, lastTraces: traces });
+      return window.Plotly.react(graphElement, traces, layout, config).then(() => {
+        animationState.set(graphElement, { ready: true, lastTraces: traces });
+      });
+    }
+
+    return window.Plotly.animate(graphElement, {
+      data: traces.map((trace) => ({
+        x: trace.x,
+        y: trace.y,
+        marker: trace.marker,
+        line: trace.line
+      })),
+      traces: traces.map((_, index) => index),
+      layout
+    }, {
+      mode: 'immediate',
+      transition: {
+        duration: 650,
+        easing: 'cubic-in-out'
+      },
+      frame: {
+        duration: 650,
+        redraw: false
+      }
+    }).then(() => {
+      animationState.set(graphElement, { ready: true, lastTraces: traces });
+      return window.Plotly.react(graphElement, traces, layout, config);
+    }).catch(() => {
+      animationState.set(graphElement, { ready: false, lastTraces: traces });
+      return window.Plotly.react(graphElement, traces, layout, config).then(() => {
+        animationState.set(graphElement, { ready: true, lastTraces: traces });
+      });
+    });
+  }
+
+  function canAnimate(previousTraces, nextTraces) {
+    if (!Array.isArray(previousTraces) || previousTraces.length !== nextTraces.length) {
+      return false;
+    }
+
+    return nextTraces.every((trace, index) => {
+      const previous = previousTraces[index];
+      if (!previous || previous.type !== trace.type || previous.mode !== trace.mode) {
+        return false;
+      }
+
+      return Array.isArray(previous.x)
+        && Array.isArray(trace.x)
+        && previous.x.length === trace.x.length
+        && previous.x.every((value, pointIndex) => value === trace.x[pointIndex]);
+    });
   }
 
   function bindViewportEvents(graphElement, onViewportChange) {
@@ -302,6 +386,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
   function purgePlot(graphElement) {
     if (window.Plotly) {
+      animationState.delete(graphElement);
       window.Plotly.purge(graphElement);
     }
   }
