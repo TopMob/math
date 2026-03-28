@@ -3,6 +3,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 (() => {
   const { PLOT_COLORS, MODE_LABELS } = window.MathVisualizer.config;
   const { isFiniteNumber } = window.MathVisualizer.utils;
+  const animationState = new WeakMap();
 
   function createLineTrace({ color, hoverLabel, name, showLegend, x, y }) {
     return {
@@ -299,7 +300,60 @@ window.MathVisualizer = window.MathVisualizer || {};
       modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d']
     };
 
-    return window.Plotly.react(graphElement, traces, layout, config);
+    const graphState = animationState.get(graphElement);
+    if (!graphState || !canAnimate(graphState.lastTraces, traces)) {
+      animationState.set(graphElement, { ready: false, lastTraces: traces });
+      return window.Plotly.react(graphElement, traces, layout, config).then(() => {
+        animationState.set(graphElement, { ready: true, lastTraces: traces });
+      });
+    }
+
+    return window.Plotly.animate(graphElement, {
+      data: traces.map((trace) => ({
+        x: trace.x,
+        y: trace.y,
+        marker: trace.marker,
+        line: trace.line
+      })),
+      traces: traces.map((_, index) => index),
+      layout
+    }, {
+      mode: 'immediate',
+      transition: {
+        duration: 650,
+        easing: 'cubic-in-out'
+      },
+      frame: {
+        duration: 650,
+        redraw: false
+      }
+    }).then(() => {
+      animationState.set(graphElement, { ready: true, lastTraces: traces });
+      return window.Plotly.react(graphElement, traces, layout, config);
+    }).catch(() => {
+      animationState.set(graphElement, { ready: false, lastTraces: traces });
+      return window.Plotly.react(graphElement, traces, layout, config).then(() => {
+        animationState.set(graphElement, { ready: true, lastTraces: traces });
+      });
+    });
+  }
+
+  function canAnimate(previousTraces, nextTraces) {
+    if (!Array.isArray(previousTraces) || previousTraces.length !== nextTraces.length) {
+      return false;
+    }
+
+    return nextTraces.every((trace, index) => {
+      const previous = previousTraces[index];
+      if (!previous || previous.type !== trace.type || previous.mode !== trace.mode) {
+        return false;
+      }
+
+      return Array.isArray(previous.x)
+        && Array.isArray(trace.x)
+        && previous.x.length === trace.x.length
+        && previous.x.every((value, pointIndex) => value === trace.x[pointIndex]);
+    });
   }
 
   function bindViewportEvents(graphElement, onViewportChange) {
@@ -332,6 +386,7 @@ window.MathVisualizer = window.MathVisualizer || {};
 
   function purgePlot(graphElement) {
     if (window.Plotly) {
+      animationState.delete(graphElement);
       window.Plotly.purge(graphElement);
     }
   }
